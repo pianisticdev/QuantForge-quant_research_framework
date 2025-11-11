@@ -1,0 +1,53 @@
+#ifndef QUANT_FORGE_PLUGINS_LOADERS_INTERFACE_HPP
+#define QUANT_FORGE_PLUGINS_LOADERS_INTERFACE_HPP
+
+#include <string>
+
+#include "../../http/api/stock_api.hpp"
+#include "../abi/abi.h"
+
+namespace plugins::loaders {
+
+    const int64_t NANOSECONDS_PER_MILLISECOND = 1000000;
+
+    inline Bar to_plugin_bar(const http::stock_api::AggregateBarResult& bar) {
+        return Bar{
+            .unix_ts_ns_ = bar.unix_ts_ms_ * NANOSECONDS_PER_MILLISECOND,
+            .open_ = bar.open_,
+            .high_ = bar.high_,
+            .low_ = bar.low_,
+            .close_ = bar.close_,
+            .volume_ = bar.volume_,
+        };
+    }
+
+    inline http::stock_api::AggregateBarResult to_http_bar(const Bar& bar) {
+        return http::stock_api::AggregateBarResult{
+            .unix_ts_ms_ = bar.unix_ts_ns_ / NANOSECONDS_PER_MILLISECOND,
+            .open_ = bar.open_,
+            .high_ = bar.high_,
+            .low_ = bar.low_,
+            .close_ = bar.close_,
+            .volume_ = bar.volume_,
+        };
+    }
+
+    class IPluginLoader {
+       public:
+        IPluginLoader() = default;
+        virtual ~IPluginLoader() = default;
+
+        virtual void load_plugin(const SimulatorContext& ctx);
+        virtual void on_init() const = 0;
+        [[nodiscard]] virtual PluginResult on_start() const = 0;
+        [[nodiscard]] virtual PluginResult on_bar(const http::stock_api::AggregateBarResult& bar) const = 0;
+        [[nodiscard]] virtual PluginResult on_end() const = 0;
+        virtual void free_string(const char* str) const = 0;
+        [[nodiscard]] virtual std::string get_plugin_name() const = 0;
+        virtual void unload_plugin();
+        [[nodiscard]] virtual PluginExport* get_plugin_export() const;
+    };
+
+}  // namespace plugins::loaders
+
+#endif

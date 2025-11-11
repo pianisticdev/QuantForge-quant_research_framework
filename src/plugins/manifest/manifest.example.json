@@ -1,0 +1,46 @@
+{
+  "name": "sma_python",
+  "version": "1.0.0",
+  "api_version": 1,
+  "kind": "python",
+  "entry": "sma_python.py",
+  "description": "A simple SMA strategy implemented in Python",
+  "author": "John Doe",
+  "host_params": {
+    "initial_capital": "100000",
+    "leverage": "1",
+    "commission": "0.0001",
+    "commission_type": "per_share",
+    "slippage": "0",
+    "slippage_model": "none",
+    "tax": "0.001",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "symbols": [
+      {
+        "symbol": "AAPL",
+        "timespan_unit": "minute",
+        "timespan": 1,
+        "primary": true
+      },
+      {
+        "symbol": "GOOG",
+        "timespan_unit": "minute",
+        "timespan": 1,
+        "primary": false
+      }
+    ],
+    "backtest_start_datetime": "2023-01-01T00:00:00Z",
+    "backtest_end_datetime": "2025-10-01T00:00:00Z",
+    "monte_carlo_runs": 1,
+    "monte_carlo_seed": null,
+    "optimization_mode": "none",
+    "market_hours_only": false,
+    "allow_fractional_shares": false
+  },
+  "strategy_params": {
+    "fast": 10,
+    "slow": 30,
+    "symbol": "AAPL"
+  }
+}
