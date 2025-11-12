@@ -5,6 +5,7 @@
 
 #include "../../http/api/stock_api.hpp"
 #include "../abi/abi.h"
+#include "../manifest/manifest.hpp"
 
 namespace plugins::loaders {
 
@@ -46,6 +47,7 @@ namespace plugins::loaders {
         [[nodiscard]] virtual std::string get_plugin_name() const = 0;
         virtual void unload_plugin();
         [[nodiscard]] virtual PluginExport* get_plugin_export() const;
+        [[nodiscard]] virtual plugins::manifest::HostParams get_host_params() const = 0;
     };
 
 }  // namespace plugins::loaders

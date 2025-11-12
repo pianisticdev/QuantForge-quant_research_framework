@@ -185,4 +185,6 @@ namespace plugins::manifest {
         };
     };
 
+    HostParams PluginManifest::get_host_params() const { return host_params_; }
+
 }  // namespace plugins::manifest

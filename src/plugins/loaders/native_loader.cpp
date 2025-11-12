@@ -23,13 +23,14 @@ namespace plugins::loaders {
 
         lib_ = LibHandler::open(plugin_manifest_->get_entry(), err);
 
-        if (lib_.handle == nullptr) {
-            return;
+        if (lib_.handle_ == nullptr) {
+            throw std::runtime_error(err);
         }
 
         auto create = lib_.sym<CreatePluginFn>(PLUGIN_CREATE_SYMBOL, err);
         if (create == nullptr) {
             lib_.close();
+            throw std::runtime_error("Failed to load plugin");
             return;
         }
 
@@ -39,10 +40,14 @@ namespace plugins::loaders {
             err = "API mismatch or null instance";
             lib_.close();
             exp_ = {};
-        } else if (exp_.vtable_.destroy == nullptr || exp_.vtable_.on_end == nullptr) {
+            throw std::runtime_error(err);
+        }
+
+        if (exp_.vtable_.destroy == nullptr || exp_.vtable_.on_end == nullptr) {
             err = "Required vtable methods missing";
             lib_.close();
             exp_ = {};
+            throw std::runtime_error(err);
         }
     }
 
@@ -124,5 +129,7 @@ namespace plugins::loaders {
     }
 
     PluginExport* NativeLoader::get_plugin_export() const { return &exp_; }
+
+    plugins::manifest::HostParams NativeLoader::get_host_params() const { return plugin_manifest_->get_host_params(); }
 
 }  // namespace plugins::loaders

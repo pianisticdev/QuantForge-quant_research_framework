@@ -23,6 +23,7 @@ namespace plugins::loaders {
         [[nodiscard]] std::string get_plugin_name() const override;
         void unload_plugin() override;
         [[nodiscard]] PluginExport* get_plugin_export() const override;
+        [[nodiscard]] plugins::manifest::HostParams get_host_params() const override;
 
        private:
         std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest_;

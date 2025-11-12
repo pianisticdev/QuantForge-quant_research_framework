@@ -24,11 +24,21 @@ add_subdirectory(src/plugins/abi)
 add_subdirectory(src/plugins/loaders)
 add_subdirectory(src/plugins/manifest)
 
+# Simulators
+add_subdirectory(src/simulators/back_test)
+add_subdirectory(src/simulators/monte_carlo)
+
+# Renderers
+add_subdirectory(src/renderers)
+
+# Forge
+add_subdirectory(src/forge/forge_engine)
+add_subdirectory(src/forge/stores)
+
 # Executable that wires everything up in main.cpp
 add_executable(quant_forge main.cpp)
 
 # Only link the top-level API; it brings the rest transitively.
 target_link_libraries(
   quant_forge
-  PRIVATE http_api http_provider plugins_manager
-          utils)
+  PRIVATE http_api http_provider forge_engine utils)

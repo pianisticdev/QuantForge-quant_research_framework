@@ -143,6 +143,7 @@ namespace plugins::manifest {
         [[nodiscard]] std::string get_kind() const;
         [[nodiscard]] std::string get_entry() const;
         [[nodiscard]] PluginOptions get_options() const;
+        [[nodiscard]] HostParams get_host_params() const;
 
        private:
         int api_version_ = 0;

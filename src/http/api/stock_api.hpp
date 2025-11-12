@@ -5,6 +5,7 @@
 #ifndef QUANT_FORGE_STOCK_API_HPP
 #define QUANT_FORGE_STOCK_API_HPP
 
+#include <memory>
 #include <string>
 
 #include "../client/curl_easy.hpp"
@@ -55,11 +56,11 @@ namespace http::stock_api {
 
     class StockAPI {
        public:
-        explicit StockAPI(std::shared_ptr<IStockDataProvider> p, std::shared_ptr<http::client::CurlEasy> ce);
+        explicit StockAPI(std::unique_ptr<IStockDataProvider> p, std::unique_ptr<http::client::CurlEasy> ce);
         AggregateBars custom_aggregate_bars(const AggregateBarsArgs& args);
 
        private:
-        std::shared_ptr<IStockDataProvider> provider_;
+        std::unique_ptr<IStockDataProvider> provider_;
         std::shared_ptr<http::client::CurlEasy> http_;
     };
 

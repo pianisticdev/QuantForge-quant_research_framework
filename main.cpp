@@ -1,11 +1,13 @@
 #include <iostream>
+#include <thread>
 
-#include "src/http/api/stock_api.hpp"
+#include "src/forge/forge_engine/forge.hpp"
 #include "src/http/cache/network_cache.hpp"
 #include "src/http/client/curl_easy.hpp"
 #include "src/http/client/curl_global.hpp"
 #include "src/http/error/http_error.hpp"
 #include "src/http/provider/polygon.hpp"
+#include "src/renderers/console_renderer.hpp"
 #include "src/utils/constants.hpp"
 
 int main() {
@@ -14,51 +16,48 @@ int main() {
         // Collect
         //
 
-        const char* api_key = std::getenv("POLYGON_API_KEY");
-        if (api_key == nullptr) {
+        const char* plugin_loader = "directory";
+        const char* plugin_root_path = "plugins";
+        const unsigned int max_threads = std::thread::hardware_concurrency();
+        const std::string polygon_api_key = std::getenv("POLYGON_API_KEY");
+        const std::vector<std::string> enabled_plugin_names = {"sma_native", "sma_python"};
+        const bool is_cache_enabled = true;
+        const int cache_ttl_s = constants::ONE_DAY_S;
+
+        if (polygon_api_key.empty()) {
             std::cout << "POLYGON_API_KEY not set" << std::endl;
             return 1;
         }
 
-        auto cache_policy =
-            std::make_unique<http::cache::NetworkCachePolicy>(http::cache::NetworkCachePolicy{.enable_caching_ = true, .ttl_s_ = constants::ONE_DAY_S});
+        http::client::CurlGlobal curl_global;
 
-        http::stock_api::AggregateBarsArgs args{.symbol_ = "AAPL", .from_ = "2023-01-01", .to_ = "2025-10-01", .timespan_ = 1, .timespan_unit_ = "hour"};
+        auto network_cache_policy =
+            std::make_unique<http::cache::NetworkCachePolicy>(http::cache::NetworkCachePolicy{.enable_caching_ = is_cache_enabled, .ttl_s_ = cache_ttl_s});
+        auto network_cache = std::make_unique<http::cache::NetworkCache>(std::move(network_cache_policy));
+        auto http_client = std::make_unique<http::client::CurlEasy>(std::move(network_cache));
 
-        static http::client::CurlGlobal curl_global;
+        auto data_provider = std::make_unique<http::provider::PolygonProvider>(polygon_api_key);
 
-        static std::shared_ptr<http::cache::NetworkCache> cache_layer = std::make_shared<http::cache::NetworkCache>(std::move(cache_policy));
+        auto engine = forge::ForgeEngineBuilder()
+                          .with_http_client(std::move(http_client))
+                          .with_data_provider(std::move(data_provider))
+                          .with_thread_pools(forge::ThreadPoolOptions{.io_threads_ = max_threads / 2, .compute_threads_ = max_threads})
+                          .with_plugin_names(enabled_plugin_names)
+                          .with_renderer(std::make_unique<renderers::ConsoleRenderer>())
+                          .validate()
+                          .build();
 
-        static std::shared_ptr<http::client::CurlEasy> curl_easy = std::make_shared<http::client::CurlEasy>(cache_layer);
-        curl_easy->enable_keepalive();
-        curl_easy->enable_compression();
-        curl_easy->prefer_http2_tls();
-
-        auto provider = std::make_shared<http::provider::PolygonProvider>(api_key);
-        http::stock_api::StockAPI stock_api(provider, curl_easy);
-        auto bars = stock_api.custom_aggregate_bars(args);
-
-        //
-        // Log
-        //
-
-        std::cout << "\n--- Aggregate Bars ---\n";
-        std::cout << "Ticker: " << bars.ticker_ << "\n";
-        std::cout << "Adjusted: " << (bars.adjusted_ ? "true" : "false") << "\n";
-        std::cout << "Query count: " << bars.query_count_ << "  Result count: " << bars.result_count_ << "\n";
-
-        std::cout << "\nFirst 5 bars:\n";
-        constexpr int MIN_BARS_TO_DISPLAY = 5;
-        for (size_t i = 0; i < std::min<size_t>(MIN_BARS_TO_DISPLAY, bars.results_.size()); ++i) {
-            const auto& b = bars.results_[i];
-            std::cout << "#" << i << " t=" << b.unix_ts_ms_ << " o=" << b.open_ << " h=" << b.high_ << " l=" << b.low_ << " c=" << b.close_
-                      << " v=" << b.volume_ << " vw=" << b.volume_weighted_price_ << " n=" << b.tx_count_ << " otc=" << (b.is_otc_ ? "true" : "false") << "\n";
-        }
-    } catch (const http::http_error::HttpError& ex) {
-        std::cerr << "HTTP Error " << ex.status_ << " at " << ex.url_ << "\n"
-                  << ex.what() << "\n"
-                  << "Body (preview): " << ex.body_preview_ << "\n";
+        engine->initialize(forge::InitializationOptions{.loader_ = plugin_loader, .root_path_ = plugin_root_path});
+        engine->fetch_data();
+        engine->run();
+        engine->report();
+    } catch (const http::http_error::HttpError& e) {
+        std::cerr << "HTTP Error: " << e.what() << " (URL: " << e.url_ << ")\n";
+        return 2;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
         return 1;
     }
+
     return 0;
-}
+};

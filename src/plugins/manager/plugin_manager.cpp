@@ -11,10 +11,10 @@
 #include "../manifest/manifest.hpp"
 
 namespace plugins::manager {
-    PluginManager::PluginManager() { ctx_.api_version_ = PLUGIN_API_VERSION; }
+    PluginManager::PluginManager(const std::vector<std::string>& plugin_names) : plugin_names_(plugin_names) { ctx_.api_version_ = PLUGIN_API_VERSION; }
 
-    void PluginManager::load_plugins_from_dir(const std::filesystem::path& root, const std::vector<std::string>& plugin_names) {
-        if (plugin_names.empty()) {
+    void PluginManager::load_plugins_from_dir(const std::filesystem::path& root) {
+        if (plugin_names_.empty()) {
             throw std::runtime_error("No plugin names provided to load");
         }
 
@@ -29,7 +29,7 @@ namespace plugins::manager {
 
             plugin_manifest->parse_json(document);
 
-            if (!plugin_manifest->is_one_of(plugin_names)) {
+            if (!plugin_manifest->is_one_of(plugin_names_)) {
                 continue;
             }
 
@@ -48,16 +48,6 @@ namespace plugins::manager {
 
             plugin_map_by_name_.emplace(loader->get_plugin_name(), std::move(loader));
         }
-    }
-
-    PluginExport* PluginManager::lookup(const std::string& name) {
-        auto it = plugin_map_by_name_.find(name);
-
-        if (it != plugin_map_by_name_.end()) {
-            return it->second->get_plugin_export();
-        }
-
-        return nullptr;
     }
 
     PluginManager::~PluginManager() {

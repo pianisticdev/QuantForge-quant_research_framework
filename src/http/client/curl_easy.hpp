@@ -30,7 +30,7 @@ namespace http::client {
 
     class CurlEasy {
        public:
-        CurlEasy(std::shared_ptr<http::cache::NetworkCache> cache_layer);
+        CurlEasy(std::unique_ptr<http::cache::NetworkCache> cache_layer);
 
         ~CurlEasy();
         CurlEasy(const CurlEasy&) = delete;
@@ -76,7 +76,7 @@ namespace http::client {
         curl_slist* headers_{};
 
         CURL* handle_{};
-        std::shared_ptr<http::cache::NetworkCache> cache_layer_;
+        std::unique_ptr<http::cache::NetworkCache> cache_layer_;
     };
 }  // namespace http::client
 

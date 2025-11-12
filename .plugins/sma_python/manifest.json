@@ -1,0 +1,21 @@
+{
+  "name": "sma_python",
+  "version": "1.0.0",
+  "api_version": 1,
+  "kind": "python",
+  "entry": "sma_python.py",
+  "host_params": {
+    "initial_capital": "100000",
+    "leverage": "1",
+    "commission": "0.0001",
+    "slippage": "0",
+    "tax": "0.001",
+    "currency": "USD",
+    "timezone": "America/New_York"
+  },
+  "strategy_params": {
+    "fast": 10,
+    "slow": 30,
+    "symbol": "AAPL"
+  }
+}

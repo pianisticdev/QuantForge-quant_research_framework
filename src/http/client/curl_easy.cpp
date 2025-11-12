@@ -49,7 +49,7 @@ namespace http::client {
         static constexpr const char* CACHE_CONTROL = "cache-control:";
     };
 
-    CurlEasy::CurlEasy(std::shared_ptr<http::cache::NetworkCache> cache_layer) : handle_(curl_easy_init()), cache_layer_(std::move(cache_layer)) {
+    CurlEasy::CurlEasy(std::unique_ptr<http::cache::NetworkCache> cache_layer) : handle_(curl_easy_init()), cache_layer_(std::move(cache_layer)) {
         if (handle_ == nullptr) {
             throw std::runtime_error("Failed to create CURL easy handle");
         }

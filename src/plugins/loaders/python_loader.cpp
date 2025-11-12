@@ -162,4 +162,6 @@ namespace plugins::loaders {
 
     std::string PythonLoader::get_plugin_name() const { return plugin_manifest_->get_name(); }
 
+    plugins::manifest::HostParams PythonLoader::get_host_params() const { return plugin_manifest_->get_host_params(); }
+
 }  // namespace plugins::loaders

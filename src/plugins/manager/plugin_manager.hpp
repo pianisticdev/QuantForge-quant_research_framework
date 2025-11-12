@@ -12,9 +12,9 @@ namespace plugins::manager {
 
     class PluginManager {
        public:
-        PluginManager();
+        PluginManager(const std::vector<std::string>& plugin_names);
 
-        void load_plugins_from_dir(const std::filesystem::path& root, const std::vector<std::string>& plugin_names);
+        void load_plugins_from_dir(const std::filesystem::path& root);
 
         ~PluginManager();
         PluginManager(const PluginManager&) = delete;
@@ -22,10 +22,17 @@ namespace plugins::manager {
         PluginManager(PluginManager&&) = delete;
         PluginManager& operator=(PluginManager&&) = delete;
 
+        template <typename Func>
+        void with_plugins(Func&& func) {
+            for (auto& [plugin_name, loader] : plugin_map_by_name_) {
+                func(loader.get());
+            }
+        }
+
        private:
-        PluginExport* lookup(const std::string& name);
         SimulatorContext ctx_{};
         std::unordered_map<std::string, std::unique_ptr<plugins::loaders::IPluginLoader>> plugin_map_by_name_;
+        std::vector<std::string> plugin_names_;
     };
 
 }  // namespace plugins::manager
