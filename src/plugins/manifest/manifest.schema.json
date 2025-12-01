@@ -80,7 +80,8 @@
         "optimization_mode": {
           "type": "string",
           "enum": ["none", "grid_search", "bayesian", "genetic"],
-          "default": "none"
+          "default": "none",
+          "description": "Optimization strategy used for refining strategy parameters during pruning."
         },
         "symbols": {
           "type": "array",
@@ -97,110 +98,126 @@
               "timespan": { "type": "integer", "minimum": 1 },
               "primary": { "type": "boolean", "default": true }
             }
-          }
+          },
+          "description": "The symbols used by the portfolio during this strategy execution"
         },
         "initial_capital": {
           "type": "string",
-          "pattern": "^\\d+(\\.\\d+)?$"
+          "pattern": "^\\d+(\\.\\d+)?$",
+          "description": "The max-capital the user is starting with for the strategy, formatted as '150.00'"
         },
         "commission": {
           "type": "string",
           "pattern": "^\\d+(\\.\\d+)?$",
-          "default": "0"
+          "default": "0",
+          "description": "The amount of commision per trade that goes to the exchange"
         },
         "commission_type": {
           "type": "string",
           "enum": ["per_share", "percentage", "flat"],
-          "default": "per_share"
+          "default": "per_share",
+          "description": "The way commision is calculated"
         },
         "slippage_model": {
           "type": "string",
-          "enum": ["none", "fixed", "percentage", "volume_based"],
-          "default": "none"
+          "enum": [
+            "none",
+            "time_based",
+            "time_volume_based"
+          ],
+          "default": "none",
+          "description": "The way slippage is modeled during order execution"
         },
         "slippage": {
           "type": "string",
           "pattern": "^\\d+(\\.\\d+)?$",
-          "default": "0"
+          "default": "0",
+          "description": "The amount of slippage per order exection"
         },
         "tax": {
           "type": "string",
           "pattern": "^\\d+(\\.\\d+)?$",
-          "default": "0"
+          "default": "0",
+          "description": "The amount of tax applied to sells"
         },
         "default_currency": {
           "type": "string",
           "pattern": "^[A-Z]{3}$",
-          "default": "USD"
+          "default": "USD",
+          "description": "The currency used by the strategy"
         },
         "timezone": {
           "type": "string",
-          "default": "America/New_York"
+          "default": "America/New_York",
+          "description": "The timezone in which the strategy runs"
         },
         "market_hours_only": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "If trades can only be executed during market hours"
         },
         "allow_fractional_shares": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "If trades can contain fractional quantities, or only integers"
         },
-
-        //
-        // Configuration for signal based back testing
-        //
         "position_sizing_method": {
           "type": "string",
           "enum": ["fixed_percentage", "fixed_dollar", "equal_weight"],
-          "default": "fixed_percentage"
+          "default": "fixed_percentage",
+          "description": "For signal instructions, what strategy should the host use for sizing orders"
         },
         "position_size_value": {
           "type": "number",
           "minimum": 0.0,
           "maximum": 1.0,
-          "default": 0.10
+          "default": 0.10,
+          "description": "For signal instructions, the base value the host should use for sizing orders"
         },
         "max_position_size": {
           "type": "number",
           "minimum": 0.0,
           "maximum": 1.0,
-          "default": 0.30
-        },
-        "max_concurrent_positions": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 10
+          "default": 0.30,
+          "description": "For signal instructions, a upper bound on how big an order the host can make"
         },
         "use_stop_loss": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "For signal instruction, should the host apply stop-loss risk management"
         },
         "stop_loss_pct": {
           "type": "number",
           "minimum": 0.0,
           "maximum": 1.0,
-          "default": 0.02
+          "default": 0.02,
+          "description": "For signal instructions, how should the host apply stop-loss risk management"
         },
         "use_take_profit": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "description": "For signal instructions, should the host apply take-profit risk management"
         },
         "take_profit_pct": {
           "type": "number",
           "minimum": 0.0,
           "maximum": 1.0,
-          "default": 0.10
+          "default": 0.10,
+          "description": "For signal instructions, how should the host apply take-profit risk management"
         },
-        "execution_model": {
-          "type": "string",
-          "enum": ["market", "realistic"],
-          "default": "market"
+        "fill_max_pct_of_volume": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.10,
+          "description": "Regulates max order fill depending on asset volume"
         },
-        "fill_delay_bars": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 10,
-          "default": 1
+        "risk_free_rate": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.02,
+          "description": "Annual risk-free rate for Sharpe/Sortino calculations"
         }
       }
     },

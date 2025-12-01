@@ -97,8 +97,9 @@ namespace plugins::manifest {
                 parser::parse_value<bool>(doc["host_params"]["allow_fractional_shares"].get_bool(), ALLOW_FRACTIONAL_SHARES_PARSER_OPTIONS),
             .monte_carlo_runs_ = int(parser::parse_value(doc["host_params"]["monte_carlo_runs"].get_int64(), MONTE_CARLO_RUNS_PARSER_OPTIONS)),
             .monte_carlo_seed_ = int(parser::parse_value(doc["host_params"]["monte_carlo_seed"].get_int64(), MONTE_CARLO_SEED_PARSER_OPTIONS)),
-            .initial_capital_ = money_utils::parse_money_micro(
-                std::string(parser::parse_value(doc["host_params"]["initial_capital"].get_string(), INITIAL_CAPITAL_PARSER_OPTIONS))),
+            .initial_capital_ = money_utils::Money::parse_microdollars(
+                                    std::string(parser::parse_value(doc["host_params"]["initial_capital"].get_string(), INITIAL_CAPITAL_PARSER_OPTIONS)))
+                                    .to_microdollars(),
             .backtest_start_datetime_ =
                 std::string(parser::parse_value(doc["host_params"]["backtest_start_datetime"].get_string(), BACKTEST_START_DATETIME_PARSER_OPTIONS)),
             .backtest_end_datetime_ =
@@ -121,15 +122,13 @@ namespace plugins::manifest {
                 std::optional<double>(parser::parse_value(doc["host_params"]["position_size_value"].get_double(), POSITION_SIZE_VALUE_PARSER_OPTIONS)),
             .max_position_size_ =
                 std::optional<double>(parser::parse_value(doc["host_params"]["max_position_size"].get_double(), MAX_POSITION_SIZE_PARSER_OPTIONS)),
-            .max_concurrent_positions_ =
-                std::optional<int>(parser::parse_value(doc["host_params"]["max_concurrent_positions"].get_int64(), MAX_CONCURRENT_POSITIONS_PARSER_OPTIONS)),
             .use_stop_loss_ = std::optional<bool>(parser::parse_value(doc["host_params"]["use_stop_loss"].get_bool(), USE_STOP_LOSS_PARSER_OPTIONS)),
             .stop_loss_pct_ = std::optional<double>(parser::parse_value(doc["host_params"]["stop_loss_pct"].get_double(), STOP_LOSS_PCT_PARSER_OPTIONS)),
             .use_take_profit_ = std::optional<bool>(parser::parse_value(doc["host_params"]["use_take_profit"].get_bool(), USE_TAKE_PROFIT_PARSER_OPTIONS)),
             .take_profit_pct_ = std::optional<double>(parser::parse_value(doc["host_params"]["take_profit_pct"].get_double(), TAKE_PROFIT_PCT_PARSER_OPTIONS)),
-            .execution_model_ =
-                std::optional<std::string>(parser::parse_value(doc["host_params"]["execution_model"].get_string(), EXECUTION_MODEL_PARSER_OPTIONS)),
-            .fill_delay_bars_ = std::optional<int>(parser::parse_value(doc["host_params"]["fill_delay_bars"].get_int64(), FILL_DELAY_BARS_PARSER_OPTIONS)),
+            .fill_max_pct_of_volume_ =
+                std::optional<double>(parser::parse_value(doc["host_params"]["fill_max_pct_of_volume"].get_double(), FILL_MAX_PCT_OF_VOLUME_PARSER_OPTIONS)),
+            .risk_free_rate_ = std::optional<double>(parser::parse_value(doc["host_params"]["risk_free_rate"].get_double(), RISK_FREE_RATE_PARSER_OPTIONS)),
             .symbols_ = parsed_symbols,
         };
 
@@ -181,17 +180,16 @@ namespace plugins::manifest {
         add_optional("default_currency", host_params_.default_currency_);
         add_optional("timezone", host_params_.timezone_);
         add_optional("optimization_mode", host_params_.optimization_mode_);
+        add_optional("fill_max_pct_of_volume", host_params_.fill_max_pct_of_volume_);
+        add_optional("risk_free_rate", host_params_.risk_free_rate_);
 
         add_optional("position_sizing_method", host_params_.position_sizing_method_);
         add_optional("position_size_value", host_params_.position_size_value_);
         add_optional("max_position_size", host_params_.max_position_size_);
-        add_optional("max_concurrent_positions", host_params_.max_concurrent_positions_);
         add_optional("use_stop_loss", host_params_.use_stop_loss_);
         add_optional("stop_loss_pct", host_params_.stop_loss_pct_);
         add_optional("use_take_profit", host_params_.use_take_profit_);
         add_optional("take_profit_pct", host_params_.take_profit_pct_);
-        add_optional("execution_model", host_params_.execution_model_);
-        add_optional("fill_delay_bars", host_params_.fill_delay_bars_);
 
         for (size_t i = 0; i < host_params_.symbols_.size(); ++i) {
             const auto& sym = host_params_.symbols_[i];

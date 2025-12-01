@@ -53,13 +53,12 @@ namespace plugins::manifest {
         std::optional<std::string> position_sizing_method_;
         std::optional<double> position_size_value_;
         std::optional<double> max_position_size_;
-        std::optional<int> max_concurrent_positions_;
         std::optional<bool> use_stop_loss_;
         std::optional<double> stop_loss_pct_;
         std::optional<bool> use_take_profit_;
         std::optional<double> take_profit_pct_;
-        std::optional<std::string> execution_model_;
-        std::optional<int> fill_delay_bars_;
+        std::optional<double> fill_max_pct_of_volume_;
+        std::optional<double> risk_free_rate_;
     };
 
     const ParserOptions<std::string_view> NAME_PARSER_OPTIONS = {
@@ -105,7 +104,7 @@ namespace plugins::manifest {
     const ParserOptions<double> SLIPPAGE_PARSER_OPTIONS = {
         .is_required_ = true, .allowed_values_ = {}, .fallback_value_ = 0.0, .error_message_ = "Invalid slippage"};
     const ParserOptions<std::string_view> SLIPPAGE_MODEL_PARSER_OPTIONS = {.is_required_ = true,
-                                                                           .allowed_values_ = {"none", "fixed", "percentage", "volume_based"},
+                                                                           .allowed_values_ = {"none", "time_based", "time_volume_based"},
                                                                            .fallback_value_ = "",
                                                                            .error_message_ = "Invalid slippage model"};
     const ParserOptions<double> TAX_PARSER_OPTIONS = {.is_required_ = true, .allowed_values_ = {}, .fallback_value_ = 0.0, .error_message_ = "Invalid tax"};
@@ -131,8 +130,6 @@ namespace plugins::manifest {
         .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.01, .error_message_ = "Invalid position size value"};
     const ParserOptions<double> MAX_POSITION_SIZE_PARSER_OPTIONS = {
         .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.0, .error_message_ = "Invalid max position size"};
-    const ParserOptions<long long> MAX_CONCURRENT_POSITIONS_PARSER_OPTIONS = {
-        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 1, .error_message_ = "Invalid max concurrent positions"};
     const ParserOptions<bool> USE_STOP_LOSS_PARSER_OPTIONS = {
         .is_required_ = false, .allowed_values_ = {true, false}, .fallback_value_ = false, .error_message_ = "Invalid use stop loss"};
     const ParserOptions<double> STOP_LOSS_PCT_PARSER_OPTIONS = {
@@ -141,10 +138,10 @@ namespace plugins::manifest {
         .is_required_ = false, .allowed_values_ = {true, false}, .fallback_value_ = false, .error_message_ = "Invalid use take profit"};
     const ParserOptions<double> TAKE_PROFIT_PCT_PARSER_OPTIONS = {
         .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.05, .error_message_ = "Invalid take profit pct"};
-    const ParserOptions<std::string_view> EXECUTION_MODEL_PARSER_OPTIONS = {
-        .is_required_ = false, .allowed_values_ = {"immediate", "delayed"}, .fallback_value_ = "immediate", .error_message_ = "Invalid execution model"};
-    const ParserOptions<long long> FILL_DELAY_BARS_PARSER_OPTIONS = {
-        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0, .error_message_ = "Invalid fill delay bars"};
+    const ParserOptions<double> FILL_MAX_PCT_OF_VOLUME_PARSER_OPTIONS = {
+        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.10, .error_message_ = "Invalid fill max pct of volume"};
+    const ParserOptions<double> RISK_FREE_RATE_PARSER_OPTIONS = {
+        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.02, .error_message_ = "Invalid risk free rate"};
 
     class PluginManifest {
        public:

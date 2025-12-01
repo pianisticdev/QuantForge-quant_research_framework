@@ -236,8 +236,10 @@ namespace plugins::loaders {
             c_inst.action_ = action;
             c_inst.quantity_ = inst_dict["quantity"].cast<double>();
             c_inst.order_type_ = order_type;
-            c_inst.limit_price_ = inst_dict.contains("limit_price") ? inst_dict["limit_price"].cast<int64_t>() : 0;
-            c_inst.stop_loss_price_ = inst_dict.contains("stop_loss_price") ? inst_dict["stop_loss_price"].cast<int64_t>() : 0;
+            c_inst.limit_price_ = inst_dict.contains("limit_price") ? inst_dict["limit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+            c_inst.stop_loss_price_ = inst_dict.contains("stop_loss_price") ? inst_dict["stop_loss_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+            c_inst.take_profit_price_ =
+                inst_dict.contains("take_profit_price") ? inst_dict["take_profit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
 
             python_plugin.current_instructions_.push_back(c_inst);
         }

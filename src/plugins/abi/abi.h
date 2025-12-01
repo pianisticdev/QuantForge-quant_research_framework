@@ -11,10 +11,13 @@ extern "C" {
 #define PLUGIN_API_VERSION 1
 
 typedef struct CTrade {
-    const char* symbol_;
+    bool is_market_sell_triggered_;
     double quantity_;
-    double price_;
+    int64_t price_;
     int64_t timestamp_ns_;
+    int64_t stop_loss_price_;
+    int64_t take_profit_price_;
+    const char* symbol_;
 } CTrade;
 
 typedef struct CPosition {
@@ -31,11 +34,12 @@ typedef struct CInstruction {
     const char* order_type_;
     int64_t limit_price_;
     int64_t stop_loss_price_;
+    int64_t take_profit_price_;
 } CInstruction;
 
 typedef struct CEquitySnapshot {
     int64_t timestamp_ns_;
-    double equity_;
+    int64_t equity_;
     double return_;
     double max_drawdown_;
     double sharpe_ratio_;
