@@ -164,42 +164,35 @@ namespace models {
         double conditional_value_at_risk_rolling_;
     };
 
-    struct BackTestState {
-        Money cash_;
-        int64_t current_timestamp_ns_;
-        std::map<std::string, Position> positions_;
-        std::map<std::string, Money> current_prices_;
-        std::map<std::string, int64_t> current_volumes_;
-        std::vector<Fill> fills_;
-        std::vector<ExitOrder> exit_orders_;
-        std::vector<EquitySnapshot> equity_curve_;
-    };
-
-    struct ExecutionResult {
-        bool success_;
+    struct ExecutionResultSucess {
         std::string message_;
-        std::optional<Money> cash_delta_;
-        std::optional<models::Position> position_;
-        std::optional<models::Fill> fill_;
+        Money cash_delta_;
+        models::Position position_;
+        models::Fill fill_;
         std::optional<models::ExitOrder> exit_order_;
         std::optional<models::Order> partial_order_;
 
-        [[nodiscard]] bool is_filled() const { return partial_order_ == std::nullopt; }
-
-        // Error Case Constructor
-        ExecutionResult(std::string message) : success_(false), message_(std::move(message)) {}
-
         // Success Case Constructor
-        ExecutionResult(bool success, std::string message, Money cash_delta, std::optional<models::Order> partial_order, models::Position position,
-                        models::Fill fill, std::optional<models::ExitOrder> exit_order)
-            : success_(success),
-              message_(std::move(message)),
+        ExecutionResultSucess(Money cash_delta, std::optional<models::Order> partial_order, models::Position position, models::Fill fill,
+                              std::optional<models::ExitOrder> exit_order)
+            : message_(partial_order.has_value() ? "Partial fill" : "Complete fill"),
               cash_delta_(cash_delta),
               position_(std::move(position)),
               fill_(std::move(fill)),
               exit_order_(std::move(exit_order)),
               partial_order_(std::move(partial_order)) {}
+
+        [[nodiscard]] bool is_partial_fill() const { return partial_order_.has_value(); }
+        [[nodiscard]] bool has_exit_strategy() const { return exit_order_.has_value(); }
     };
+
+    struct ExecutionResultError {
+        std::string message_;
+
+        ExecutionResultError(std::string message) : message_(std::move(message)) {}
+    };
+
+    using ExecutionResult = std::variant<ExecutionResultSucess, ExecutionResultError>;
 
     struct ScheduledOrder {
         Order order_;

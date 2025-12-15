@@ -3,11 +3,12 @@
 #include "../../utils/constants.hpp"
 #include "../plugins/manifest/manifest.hpp"
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
 
     int64_t SlippageCalculator::calculate_slippage_time_ns(const models::Order& order, const plugins::manifest::HostParams& host_params,
-                                                           const models::BackTestState& state) {
+                                                           const simulators::State& state) {
         if (!host_params.slippage_model_.has_value() || host_params.slippage_model_.value() == "none") {
             return 0;
         }

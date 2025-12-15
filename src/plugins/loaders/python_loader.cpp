@@ -149,7 +149,7 @@ namespace plugins::loaders {
         return exp_.vtable_.on_start(exp_.instance_);
     }
 
-    PluginResult PythonLoader::on_bar(const http::stock_api::AggregateBarResult& bar, models::BackTestState& state) const {
+    PluginResult PythonLoader::on_bar(const http::stock_api::AggregateBarResult& bar, models::State& state) const {
         if (exp_.api_version_ != PLUGIN_API_VERSION) {
             return PluginResult{1, "Invalid API Version", .instructions_count_ = 0, .instructions_ = nullptr};
         }
@@ -159,7 +159,7 @@ namespace plugins::loaders {
         }
 
         CBar plugin_bar = plugins::loaders::to_plugin_bar(bar);
-        CState c_state = models::BackTestState::to_c_state(state);
+        CState c_state = models::State::to_c_state(state);
         return exp_.vtable_.on_bar(exp_.instance_, &plugin_bar, &c_state);
     }
 

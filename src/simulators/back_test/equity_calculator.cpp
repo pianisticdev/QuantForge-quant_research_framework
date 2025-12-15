@@ -1,7 +1,9 @@
 #include "./equity_calculator.hpp"
 
+#include "./state.hpp"
+
 namespace simulators {
-    Money EquityCalculator::calculate_equity(const models::BackTestState& state) {
+    Money EquityCalculator::calculate_equity(const simulators::State& state) {
         auto total_assets = Money(0);
         for (const auto& [_, position] : state.positions_) {
             total_assets += state.current_prices_.at(position.symbol_) * position.quantity_;
@@ -15,7 +17,7 @@ namespace simulators {
         return net_return.to_dollars() / initial_capital_money.to_dollars();
     }
 
-    double EquityCalculator::calculate_max_drawdown(const models::BackTestState& state, Money equity) {
+    double EquityCalculator::calculate_max_drawdown(const simulators::State& state, Money equity) {
         Money peak_equity = equity;
         for (const auto& equity_snapshot : state.equity_curve_) {
             if (equity_snapshot.equity_ > peak_equity) {

@@ -5,12 +5,13 @@
 
 #include "../plugins/abi/abi.h"
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
 
     class ABIConverter {
        public:
-        [[nodiscard]] CState transform(const models::BackTestState& state);
+        [[nodiscard]] CState transform(const simulators::State& state);
         static void iterate_c_instructions(const PluginResult& result, const std::function<void(const CInstruction&)>& callback);
         [[nodiscard]] static models::Instruction to_instruction(const CInstruction& c_instruction);
 

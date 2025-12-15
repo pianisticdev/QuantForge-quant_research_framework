@@ -3,6 +3,7 @@
 #include <string>
 
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
 
@@ -20,7 +21,7 @@ namespace simulators {
         }
     }
 
-    void ExitOrderBook::process_stop_loss_heap(const models::BackTestState& state, const std::function<void(const models::StopLossExitOrder&)>& callback) {
+    void ExitOrderBook::process_stop_loss_heap(const simulators::State& state, const std::function<void(const models::StopLossExitOrder&)>& callback) {
         while (!stop_loss_heap_.empty()) {
             auto top_trade_opt = stop_loss_heap_.top();
 
@@ -40,7 +41,7 @@ namespace simulators {
         }
     }
 
-    void ExitOrderBook::process_take_profit_heap(const models::BackTestState& state, const std::function<void(const models::TakeProfitExitOrder&)>& callback) {
+    void ExitOrderBook::process_take_profit_heap(const simulators::State& state, const std::function<void(const models::TakeProfitExitOrder&)>& callback) {
         while (!take_profit_heap_.empty()) {
             auto top_trade_opt = take_profit_heap_.top();
 

@@ -5,13 +5,14 @@
 
 #include "../plugins/manifest/manifest.hpp"
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
 
     class SlippageCalculator {
        public:
         [[nodiscard]] static int64_t calculate_slippage_time_ns(const models::Order& order, const plugins::manifest::HostParams& host_params,
-                                                                const models::BackTestState& state);
+                                                                const simulators::State& state);
     };
 
 }  // namespace simulators

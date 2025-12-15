@@ -1,10 +1,11 @@
 #include "./position_calculator.hpp"
 
 #include "./equity_calculator.hpp"
+#include "./state.hpp"
 
 namespace simulators {
     double PositionCalculator::calculate_signal_position_size(const models::Signal& signal, const plugins::manifest::HostParams& host_params,
-                                                              const models::BackTestState& state) {
+                                                              const simulators::State& state) {
         Money current_price = state.current_prices_.at(signal.symbol_);
         Money equity = EquityCalculator::calculate_equity(state);
 
@@ -36,7 +37,7 @@ namespace simulators {
     }
 
     std::optional<Money> PositionCalculator::calculate_signal_stop_loss_price(const models::Signal& signal, const plugins::manifest::HostParams& host_params,
-                                                                              const models::BackTestState& state) {
+                                                                              const simulators::State& state) {
         if (!host_params.use_stop_loss_.value_or(false)) {
             return std::nullopt;
         }
@@ -59,7 +60,7 @@ namespace simulators {
     }
 
     std::optional<Money> PositionCalculator::calculate_signal_take_profit_price(const models::Signal& signal, const plugins::manifest::HostParams& host_params,
-                                                                                const models::BackTestState& state) {
+                                                                                const simulators::State& state) {
         if (!host_params.use_take_profit_.value_or(false)) {
             return std::nullopt;
         }
@@ -79,6 +80,25 @@ namespace simulators {
         }
 
         return std::nullopt;
+    }
+
+    models::Position PositionCalculator::calculate_position(const models::Order& order, double fillable_quantity, const simulators::State& state) {
+        models::Position position = state.positions_.at(order.symbol_);
+        position.symbol_ = order.symbol_;
+        if (order.action_ == constants::BUY) {
+            position.quantity_ += fillable_quantity;
+        } else if (order.action_ == constants::SELL) {
+            position.quantity_ -= fillable_quantity;
+        }
+        std::vector<models::Fill> fills_for_symbol;
+        for (const auto& existing_fill : state.fills_) {
+            if (existing_fill.symbol_ == order.symbol_) {
+                fills_for_symbol.emplace_back(existing_fill);
+            }
+        }
+        position.average_price_ = ((position.average_price_ * position.quantity_) + (state.current_prices_.at(order.symbol_) * fillable_quantity)) /
+                                  (position.quantity_ + fillable_quantity);
+        return position;
     }
 
 }  // namespace simulators

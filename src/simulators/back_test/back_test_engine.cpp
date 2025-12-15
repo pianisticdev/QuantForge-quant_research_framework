@@ -7,10 +7,10 @@
 #include "../../plugins/loaders/interface.hpp"
 #include "../../utils/money_utils.hpp"
 #include "./abi_converter.hpp"
-#include "./equity_calculator.hpp"
 #include "./exchange.hpp"
 #include "./executor.hpp"
 #include "./models.hpp"
+#include "./state.hpp"
 
 using namespace money_utils;
 
@@ -77,17 +77,33 @@ namespace simulators {
 
             auto execution_result = Executor::execute_order(scheduled_order.order_, host_params, state_);
 
-            if (execution_result.exit_order_.has_value()) {
-                models::ExitOrder exit_order = execution_result.exit_order_.value();
-                exit_order_book_.add_exit_order(exit_order);
-            }
-
-            if (execution_result.partial_order_.has_value()) {
-                order_book_.push(simulators::create_scheduled_order(execution_result.partial_order_.value(), host_params, state_));
-            }
-
-            resolve_execution(execution_result, host_params);
+            handle_execution_result(execution_result, host_params);
         }
+    }
+
+    void BackTestEngine::handle_execution_result(const models::ExecutionResult& execution_result, const plugins::manifest::HostParams& host_params) {
+        std::visit(
+            [&](auto arg) {
+                using T = std::decay_t<decltype(arg)>;
+
+                if constexpr (std::is_same_v<T, models::ExecutionResultError>) {
+                    throw std::runtime_error("Execution failed: " + arg.message_);
+                }
+
+                if constexpr (std::is_same_v<T, models::ExecutionResultSucess>) {
+                    if (arg.has_exit_strategy()) {
+                        models::ExitOrder exit_order = arg.exit_order_.value();
+                        exit_order_book_.add_exit_order(exit_order);
+                    }
+
+                    if (arg.is_partial_fill()) {
+                        order_book_.push(simulators::create_scheduled_order(arg.partial_order_.value(), host_params, state_));
+                    }
+                }
+
+                resolve_execution(arg, host_params);
+            },
+            execution_result);
     }
 
     // Instead of "executing" a signal, we need to convert it to order earlier, before we add a scheduled instruction to the heap.
@@ -133,41 +149,19 @@ namespace simulators {
     const BackTestReport& BackTestEngine::get_report() { return report_; }
 
     void BackTestEngine::resolve_execution(const models::ExecutionResult& execution_result, const plugins::manifest::HostParams& host_params) {
-        if (!execution_result.success_) {
-            throw std::runtime_error("Execution failed: " + execution_result.message_);
-        }
+        std::visit(
+            [&](auto arg) {
+                using T = std::decay_t<decltype(arg)>;
 
-        if (execution_result.cash_delta_.has_value() && execution_result.position_.has_value() && execution_result.fill_.has_value()) {
-            state_.cash_ += execution_result.cash_delta_.value();
+                if constexpr (std::is_same_v<T, models::ExecutionResultError>) {
+                    throw std::runtime_error("Execution failed: " + arg.message_);
+                }
 
-            state_.positions_[execution_result.position_.value().symbol_] = execution_result.position_.value();
-
-            state_.fills_.emplace_back(execution_result.fill_.value());
-            state_.current_timestamp_ns_ = execution_result.fill_.value().created_at_ns_;
-            state_.current_prices_[execution_result.fill_.value().symbol_] = execution_result.fill_.value().price_;
-
-            auto equity = EquityCalculator::calculate_equity(state_);
-
-            // We need a configurable rolling window, and a configurable risk free rate (0.02 default)
-            state_.equity_curve_.emplace_back(models::EquitySnapshot{
-                .timestamp_ns_ = execution_result.fill_.value().created_at_ns_,
-                .equity_ = equity,
-                .return_ = EquityCalculator::calculate_return(host_params, equity),
-                .max_drawdown_ = EquityCalculator::calculate_max_drawdown(state_, equity),
-                .sharpe_ratio_ = 0,
-                .sharpe_ratio_rolling_ = 0,
-                .sortino_ratio_ = 0,
-                .sortino_ratio_rolling_ = 0,
-                .calmar_ratio_ = 0,
-                .calmar_ratio_rolling_ = 0,
-                .tail_ratio_ = 0,
-                .tail_ratio_rolling_ = 0,
-                .value_at_risk_ = 0,
-                .value_at_risk_rolling_ = 0,
-                .conditional_value_at_risk_ = 0,
-                .conditional_value_at_risk_rolling_ = 0,
-            });
-        }
+                if constexpr (std::is_same_v<T, models::ExecutionResultSucess>) {
+                    state_.update_state(arg, host_params);
+                }
+            },
+            execution_result);
     }
 
 }  // namespace simulators

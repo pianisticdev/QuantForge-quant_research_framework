@@ -2,9 +2,10 @@
 #include "./abi_converter.hpp"
 
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
-    CState ABIConverter::transform(const models::BackTestState& state) {
+    CState ABIConverter::transform(const simulators::State& state) {
         c_positions_cache_ = to_c_positions(state.positions_);
         c_fills_cache_ = to_c_fills(state.fills_);
         c_equity_cache_ = to_c_equity_snapshots(state.equity_curve_);

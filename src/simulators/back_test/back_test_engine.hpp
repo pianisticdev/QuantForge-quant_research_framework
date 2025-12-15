@@ -14,6 +14,7 @@
 #include "./exit_order_book.hpp"
 #include "./models.hpp"
 #include "./slippage_calculator.hpp"
+#include "./state.hpp"
 
 using namespace money_utils;
 
@@ -29,6 +30,7 @@ namespace simulators {
         BackTestEngine(const plugins::loaders::IPluginLoader* plugin, const forge::DataStore* data_store);
         void run();
         void execute_order_book(const http::stock_api::AggregateBarResult& bar, const plugins::manifest::HostParams& host_params);
+        void handle_execution_result(const models::ExecutionResult& execution_result, const plugins::manifest::HostParams& host_params);
         void schedule_plugin_instructions(const PluginResult& result, const plugins::manifest::HostParams& host_params);
         void schedule_exit_orders(const plugins::manifest::HostParams& host_params);
         [[nodiscard]] const BackTestReport& get_report();
@@ -38,7 +40,7 @@ namespace simulators {
         const plugins::loaders::IPluginLoader* plugin_;
         const forge::DataStore* data_store_;
         BackTestReport report_;
-        models::BackTestState state_ = {
+        simulators::State state_ = {
             .cash_ = Money(0),
             .positions_ = {},
             .current_prices_ = {},
@@ -53,7 +55,7 @@ namespace simulators {
     };
 
     [[nodiscard]] models::ScheduledOrder create_scheduled_order(const models::Order& order, const plugins::manifest::HostParams& host_params,
-                                                                const models::BackTestState& state) {
+                                                                const simulators::State& state) {
         return {order, SlippageCalculator::calculate_slippage_time_ns(order, host_params, state)};
     }
 

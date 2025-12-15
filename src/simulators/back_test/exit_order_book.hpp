@@ -6,6 +6,7 @@
 #include "../../utils/max_heap.hpp"
 #include "../../utils/min_heap.hpp"
 #include "./models.hpp"
+#include "./state.hpp"
 
 namespace simulators {
 
@@ -16,8 +17,8 @@ namespace simulators {
 
        public:
         void add_exit_order(const models::ExitOrder& order);
-        void process_stop_loss_heap(const models::BackTestState& state, const std::function<void(const models::StopLossExitOrder&)>& callback);
-        void process_take_profit_heap(const models::BackTestState& state, const std::function<void(const models::TakeProfitExitOrder&)>& callback);
+        void process_stop_loss_heap(const simulators::State& state, const std::function<void(const models::StopLossExitOrder&)>& callback);
+        void process_take_profit_heap(const simulators::State& state, const std::function<void(const models::TakeProfitExitOrder&)>& callback);
         // Fill out additional methods here
     };
 

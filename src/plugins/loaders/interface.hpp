@@ -4,7 +4,7 @@
 #include <string>
 
 #include "../../http/api/stock_api.hpp"
-#include "../../simulators/back_test/models.hpp"
+#include "../../simulators/back_test/state.hpp"
 #include "../abi/abi.h"
 #include "../manifest/manifest.hpp"
 
@@ -42,7 +42,7 @@ namespace plugins::loaders {
         virtual void load_plugin(const SimulatorContext& ctx);
         virtual void on_init() const = 0;
         [[nodiscard]] virtual PluginResult on_start() const = 0;
-        [[nodiscard]] virtual PluginResult on_bar(const http::stock_api::AggregateBarResult& bar, models::BackTestState& state) const = 0;
+        [[nodiscard]] virtual PluginResult on_bar(const http::stock_api::AggregateBarResult& bar, simulators::State& state) const = 0;
         [[nodiscard]] virtual PluginResult on_end(const char** json_out) const = 0;
         virtual void free_string(const char* str) const = 0;
         [[nodiscard]] virtual std::string get_plugin_name() const = 0;
