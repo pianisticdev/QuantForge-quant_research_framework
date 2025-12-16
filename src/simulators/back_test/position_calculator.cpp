@@ -102,6 +102,10 @@ namespace simulators {
             position.quantity_ -= fillable_quantity;
         }
 
+        if (position.quantity_ == 0) {
+            position.average_price_ = Money(0);
+        }
+
         return position;
     }
 

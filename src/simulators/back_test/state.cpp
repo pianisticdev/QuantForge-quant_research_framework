@@ -8,7 +8,11 @@ namespace simulators {
     void State::update_state(const models::ExecutionResultSuccess& execution_result, const plugins::manifest::HostParams& host_params) {
         cash_ += execution_result.cash_delta_;
 
-        positions_[execution_result.position_.symbol_] = execution_result.position_;
+        if (execution_result.position_.quantity_ == 0) {
+            positions_.erase(execution_result.position_.symbol_);
+        } else {
+            positions_[execution_result.position_.symbol_] = execution_result.position_;
+        }
 
         fills_.emplace_back(execution_result.fill_);
         current_timestamp_ns_ = execution_result.fill_.created_at_ns_;

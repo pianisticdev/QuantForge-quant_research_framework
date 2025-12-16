@@ -33,6 +33,10 @@ namespace simulators {
             }
         }
 
+        if (fillable_quantity > state.positions_.at(order.symbol_).quantity_ && order.action_ == constants::SELL) {
+            return models::ExecutionResultError("Insufficient position size for trade and commission");
+        }
+
         models::Fill fill(order.symbol_, order.action_, fillable_quantity, state.current_prices_.at(order.symbol_), state.current_timestamp_ns_);
 
         auto exit_order = [&, state]() -> std::optional<models::ExitOrder> {
