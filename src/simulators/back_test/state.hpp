@@ -9,14 +9,21 @@
 
 namespace simulators {
 
+    struct CurrentBarPrices {
+        Money close_;
+        Money open_;
+        Money high_;
+        Money low_;
+    };
+
     class State {
        public:
         Money cash_;
         Money margin_in_use_;
         int64_t current_timestamp_ns_;
         std::map<std::string, models::Position> positions_;
-        std::map<std::string, Money> current_prices_;
-        std::map<std::string, int64_t> current_volumes_;
+        std::map<std::string, CurrentBarPrices> current_bar_prices_;
+        std::map<std::string, int64_t> current_bar_volumes_;
         std::vector<models::Fill> fills_;
         std::vector<models::ExitOrder> exit_orders_;
         std::vector<models::EquitySnapshot> equity_curve_;
@@ -27,6 +34,14 @@ namespace simulators {
         std::map<std::string, Money> active_margin_for_fills_;
         Money peak_equity_;
         double max_drawdown_;
+
+        [[nodiscard]] Money get_symbol_close(const std::string& symbol) const { return current_bar_prices_.at(symbol).close_; }
+
+        [[nodiscard]] Money get_symbol_open(const std::string& symbol) const { return current_bar_prices_.at(symbol).open_; }
+
+        [[nodiscard]] Money get_symbol_high(const std::string& symbol) const { return current_bar_prices_.at(symbol).high_; }
+
+        [[nodiscard]] Money get_symbol_low(const std::string& symbol) const { return current_bar_prices_.at(symbol).low_; }
 
         void prepare_initial_state(const plugins::manifest::HostParams& host_params);
 

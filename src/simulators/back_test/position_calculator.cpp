@@ -6,11 +6,11 @@
 namespace simulators {
     double PositionCalculator::calculate_signal_position_size(const models::Signal& signal, const plugins::manifest::HostParams& host_params,
                                                               const simulators::State& state) {
-        Money current_price = state.current_prices_.at(signal.symbol_);
-        Money equity = EquityCalculator::calculate_equity(state);
+        const Money current_price = state.get_symbol_close(signal.symbol_);
+        const Money equity = EquityCalculator::calculate_equity(state);
 
-        std::string sizing_method = host_params.position_sizing_method_.value_or("fixed_percentage");
-        double position_size_value = host_params.position_size_value_.value_or(constants::DEFAULT_POSITION_SIZE_VALUE);
+        const std::string sizing_method = host_params.position_sizing_method_.value_or("fixed_percentage");
+        const double position_size_value = host_params.position_size_value_.value_or(constants::DEFAULT_POSITION_SIZE_VALUE);
 
         double quantity = 0;
 
@@ -24,11 +24,11 @@ namespace simulators {
         }
 
         if (sizing_method == "equal_weight") {
-            size_t symbol_count = host_params.symbols_.size();
+            const size_t symbol_count = host_params.symbols_.size();
             if (symbol_count == 0) {
                 return 0.0;
             }
-            Money dollar_per_symbol = equity / static_cast<double>(symbol_count);
+            const Money dollar_per_symbol = equity / static_cast<double>(symbol_count);
             quantity = dollar_per_symbol.to_dollars() / current_price.to_dollars();
         }
 
@@ -45,7 +45,7 @@ namespace simulators {
             return std::nullopt;
         }
 
-        Money current_price = state.current_prices_.at(signal.symbol_);
+        const Money current_price = state.get_symbol_close(signal.symbol_);
 
         if (host_params.stop_loss_pct_ == std::nullopt) {
             return std::nullopt;
@@ -68,7 +68,7 @@ namespace simulators {
             return std::nullopt;
         }
 
-        Money current_price = state.current_prices_.at(signal.symbol_);
+        const Money current_price = state.get_symbol_close(signal.symbol_);
 
         if (host_params.take_profit_pct_ == std::nullopt) {
             return std::nullopt;

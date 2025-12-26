@@ -19,7 +19,7 @@ namespace simulators {
         }
 
         if (host_params.slippage_model_.value() == "time_volume_based") {
-            const auto volume = static_cast<double>(state.current_volumes_.at(order.symbol_));
+            const auto volume = static_cast<double>(state.current_bar_volumes_.at(order.symbol_));
 
             const double size_ratio = order.quantity_ / volume;
 

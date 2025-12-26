@@ -25,26 +25,28 @@ namespace simulators {
         std::vector<models::StopLossExitOrder> not_triggered;
 
         while (!stop_loss_heap_.empty()) {
-            auto top_trade_opt = stop_loss_heap_.top();
+            const auto top_trade_opt = stop_loss_heap_.top();
 
             if (!top_trade_opt.has_value()) {
                 break;
             }
 
-            auto pos_it = state.positions_.find(top_trade_opt.value().symbol_);
+            const models::StopLossExitOrder& exit_order = top_trade_opt.value();
+
+            auto pos_it = state.positions_.find(exit_order.symbol_);
             if (pos_it == state.positions_.end()) {
                 stop_loss_heap_.pop();
                 continue;
             }
 
-            models::StopLossExitOrder exit_order = top_trade_opt.value();
-            Money current_price = state.current_prices_.at(exit_order.symbol_);
+            const Money current_bar_low = state.get_symbol_low(exit_order.symbol_);
+            const Money current_bar_high = state.get_symbol_high(exit_order.symbol_);
 
             bool should_trigger = false;
             if (exit_order.is_short_position_) {
-                should_trigger = current_price >= exit_order.stop_loss_price_;
+                should_trigger = current_bar_high >= exit_order.stop_loss_price_;
             } else {
-                should_trigger = current_price <= exit_order.stop_loss_price_;
+                should_trigger = current_bar_low <= exit_order.stop_loss_price_;
             }
 
             stop_loss_heap_.pop();
@@ -65,26 +67,28 @@ namespace simulators {
         std::vector<models::TakeProfitExitOrder> not_triggered;
 
         while (!take_profit_heap_.empty()) {
-            auto top_trade_opt = take_profit_heap_.top();
+            const auto top_trade_opt = take_profit_heap_.top();
 
             if (!top_trade_opt.has_value()) {
                 break;
             }
 
-            auto pos_it = state.positions_.find(top_trade_opt.value().symbol_);
+            const models::TakeProfitExitOrder& exit_order = top_trade_opt.value();
+
+            const auto pos_it = state.positions_.find(exit_order.symbol_);
             if (pos_it == state.positions_.end()) {
                 take_profit_heap_.pop();
                 continue;
             }
 
-            models::TakeProfitExitOrder exit_order = top_trade_opt.value();
-            Money current_price = state.current_prices_.at(exit_order.symbol_);
+            const Money current_bar_high = state.get_symbol_high(exit_order.symbol_);
+            const Money current_bar_low = state.get_symbol_low(exit_order.symbol_);
 
             bool should_trigger = false;
             if (exit_order.is_short_position_) {
-                should_trigger = current_price <= exit_order.take_profit_price_;
+                should_trigger = current_bar_low <= exit_order.take_profit_price_;
             } else {
-                should_trigger = current_price >= exit_order.take_profit_price_;
+                should_trigger = current_bar_high >= exit_order.take_profit_price_;
             }
 
             take_profit_heap_.pop();

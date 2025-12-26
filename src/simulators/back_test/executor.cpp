@@ -10,7 +10,7 @@ namespace simulators {
     std::pair<double, double> Executor::get_fillable_and_remaining_quantities(const models::Order& order, const plugins::manifest::HostParams& host_params,
                                                                               const simulators::State& state) {
         if (host_params.fill_max_pct_of_volume_.has_value()) {
-            auto bar_volume = static_cast<double>(state.current_volumes_.at(order.symbol_));
+            auto bar_volume = static_cast<double>(state.current_bar_volumes_.at(order.symbol_));
             auto max_fill_quantity = bar_volume * host_params.fill_max_pct_of_volume_.value();
 
             if (order.quantity_ > max_fill_quantity) {
@@ -28,11 +28,11 @@ namespace simulators {
             return models::ExecutionResultError("Order quantity must be positive");
         }
 
-        if (state.current_prices_.find(order.symbol_) == state.current_prices_.end()) {
+        if (state.current_bar_prices_.find(order.symbol_) == state.current_bar_prices_.end()) {
             return models::ExecutionResultError("No price data for symbol: " + order.symbol_);
         }
 
-        if (state.current_volumes_.find(order.symbol_) == state.current_volumes_.end()) {
+        if (state.current_bar_volumes_.find(order.symbol_) == state.current_bar_volumes_.end()) {
             return models::ExecutionResultError("No volume data for symbol: " + order.symbol_);
         }
 
@@ -142,14 +142,14 @@ namespace simulators {
     }
 
     Money Executor::calculate_fill_price(const models::Order& order, const simulators::State& state) {
+        Money current_bar_close = state.get_symbol_close(order.symbol_);
         if (order.is_limit_order() && order.limit_price_.has_value()) {
-            Money current_price = state.current_prices_.at(order.symbol_);
             if (order.is_buy()) {
-                return std::min(order.limit_price_.value(), current_price);
+                return std::min(order.limit_price_.value(), current_bar_close);
             }
-            return std::max(order.limit_price_.value(), current_price);
+            return std::max(order.limit_price_.value(), current_bar_close);
         }
-        return state.current_prices_.at(order.symbol_);
+        return current_bar_close;
     }
 
     models::Order Executor::signal_to_order(const models::Signal& signal, const plugins::manifest::HostParams& host_params, const simulators::State& state) {

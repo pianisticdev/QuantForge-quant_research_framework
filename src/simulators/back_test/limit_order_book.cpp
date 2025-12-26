@@ -23,12 +23,7 @@ namespace simulators {
 
     void LimitOrderBook::process_buy_limits(const simulators::State& state, const std::function<void(const models::Order&)>& callback) {
         for (auto& [symbol, heap] : buy_limits_) {
-            auto price_it = state.current_prices_.find(symbol);
-            if (price_it == state.current_prices_.end()) {
-                continue;
-            }
-
-            Money current_price = price_it->second;
+            const Money current_bar_low = state.get_symbol_low(symbol);
 
             while (!heap.empty()) {
                 auto top_opt = heap.top();
@@ -38,7 +33,7 @@ namespace simulators {
 
                 const auto& limit_order = top_opt.value();
 
-                if (current_price > limit_order.limit_price_) {
+                if (current_bar_low > limit_order.limit_price_) {
                     break;
                 }
 
@@ -50,12 +45,7 @@ namespace simulators {
 
     void LimitOrderBook::process_sell_limits(const simulators::State& state, const std::function<void(const models::Order&)>& callback) {
         for (auto& [symbol, heap] : sell_limits_) {
-            auto price_it = state.current_prices_.find(symbol);
-            if (price_it == state.current_prices_.end()) {
-                continue;
-            }
-
-            Money current_price = price_it->second;
+            const Money current_bar_high = state.get_symbol_high(symbol);
 
             while (!heap.empty()) {
                 auto top_opt = heap.top();
@@ -65,7 +55,7 @@ namespace simulators {
 
                 const auto& limit_order = top_opt.value();
 
-                if (current_price < limit_order.limit_price_) {
+                if (current_bar_high < limit_order.limit_price_) {
                     break;
                 }
 

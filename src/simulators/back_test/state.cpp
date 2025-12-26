@@ -112,8 +112,13 @@ namespace simulators {
 
     void State::prepare_next_bar_state(const http::stock_api::AggregateBarResult& bar) {
         current_timestamp_ns_ = bar.unix_ts_ns_;
-        current_prices_[bar.symbol_] = Money::from_dollars(bar.close_);
-        current_volumes_[bar.symbol_] = static_cast<int64_t>(bar.volume_);
+        current_bar_prices_[bar.symbol_] = CurrentBarPrices{
+            .close_ = Money::from_dollars(bar.close_),
+            .open_ = Money::from_dollars(bar.open_),
+            .high_ = Money::from_dollars(bar.high_),
+            .low_ = Money::from_dollars(bar.low_),
+        };
+        current_bar_volumes_[bar.symbol_] = static_cast<int64_t>(bar.volume_);
     }
 
     void State::reduce_active_buy_fills_fifo(const std::string& symbol, double quantity) {

@@ -44,8 +44,8 @@ namespace simulators {
         simulators::State state_ = {
             .cash_ = Money(0),
             .positions_ = {},
-            .current_prices_ = {},
-            .current_volumes_ = {},
+            .current_bar_prices_ = {},
+            .current_bar_volumes_ = {},
             .current_timestamp_ns_ = 0,
             .fills_ = {},
             .exit_orders_ = {},

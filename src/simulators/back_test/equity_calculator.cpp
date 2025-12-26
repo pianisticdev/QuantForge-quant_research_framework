@@ -6,7 +6,7 @@ namespace simulators {
     Money EquityCalculator::calculate_equity(const simulators::State& state) {
         auto total_assets = Money(0);
         for (const auto& [_, position] : state.positions_) {
-            total_assets += state.current_prices_.at(position.symbol_) * position.quantity_;
+            total_assets += state.get_symbol_close(position.symbol_) * position.quantity_;
         }
         return total_assets + state.cash_;
     }
