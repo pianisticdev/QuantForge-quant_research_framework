@@ -135,6 +135,10 @@ namespace simulators {
                 }
 
                 remaining -= to_close;
+
+                Money margin_to_free = active_margin_for_fills_[fill.uuid_] * (to_close / fill.quantity_);
+                margin_in_use_ -= margin_to_free;
+                active_margin_for_fills_[fill.uuid_] -= margin_to_free;
             }
         }
     }
@@ -158,6 +162,10 @@ namespace simulators {
                 }
 
                 remaining -= to_close;
+
+                Money margin_to_free = active_margin_for_fills_[fill.uuid_] * (to_close / fill.quantity_);
+                margin_in_use_ -= margin_to_free;
+                active_margin_for_fills_[fill.uuid_] -= margin_to_free;
             }
         }
     }

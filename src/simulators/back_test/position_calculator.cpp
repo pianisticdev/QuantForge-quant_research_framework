@@ -25,6 +25,9 @@ namespace simulators {
 
         if (sizing_method == "equal_weight") {
             size_t symbol_count = host_params.symbols_.size();
+            if (symbol_count == 0) {
+                return 0.0;
+            }
             Money dollar_per_symbol = equity / static_cast<double>(symbol_count);
             quantity = dollar_per_symbol.to_dollars() / current_price.to_dollars();
         }

@@ -58,6 +58,9 @@ namespace plugins::manifest {
         std::optional<double> take_profit_pct_;
         std::optional<double> fill_max_pct_of_volume_;
         std::optional<double> risk_free_rate_;
+        std::optional<bool> allow_short_selling_;   // Default: true
+        std::optional<double> initial_margin_pct_;  // Default: 1.0 (100% - fully collateralized)
+        std::optional<double> max_leverage_;        // Default: 1.0 (no leverage)
     };
 
     const ParserOptions<std::string_view> NAME_PARSER_OPTIONS = {
@@ -140,6 +143,12 @@ namespace plugins::manifest {
         .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.10, .error_message_ = "Invalid fill max pct of volume"};
     const ParserOptions<double> RISK_FREE_RATE_PARSER_OPTIONS = {
         .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 0.02, .error_message_ = "Invalid risk free rate"};
+    const ParserOptions<bool> ALLOW_SHORT_SELLING_PARSER_OPTIONS = {
+        .is_required_ = false, .allowed_values_ = {true, false}, .fallback_value_ = true, .error_message_ = "Invalid allow short selling"};
+    const ParserOptions<double> INITIAL_MARGIN_PCT_PARSER_OPTIONS = {
+        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 1.0, .error_message_ = "Invalid initial margin pct"};
+    const ParserOptions<double> MAX_LEVERAGE_PARSER_OPTIONS = {
+        .is_required_ = false, .allowed_values_ = {}, .fallback_value_ = 1.0, .error_message_ = "Invalid max leverage"};
 
     class PluginManifest {
        public:

@@ -128,6 +128,11 @@ namespace plugins::manifest {
             .fill_max_pct_of_volume_ =
                 std::optional<double>(parser::parse_value(doc["host_params"]["fill_max_pct_of_volume"].get_double(), FILL_MAX_PCT_OF_VOLUME_PARSER_OPTIONS)),
             .risk_free_rate_ = std::optional<double>(parser::parse_value(doc["host_params"]["risk_free_rate"].get_double(), RISK_FREE_RATE_PARSER_OPTIONS)),
+            .allow_short_selling_ =
+                std::optional<bool>(parser::parse_value(doc["host_params"]["allow_short_selling"].get_bool(), ALLOW_SHORT_SELLING_PARSER_OPTIONS)),
+            .initial_margin_pct_ =
+                std::optional<double>(parser::parse_value(doc["host_params"]["initial_margin_pct"].get_double(), INITIAL_MARGIN_PCT_PARSER_OPTIONS)),
+            .max_leverage_ = std::optional<double>(parser::parse_value(doc["host_params"]["max_leverage"].get_double(), MAX_LEVERAGE_PARSER_OPTIONS)),
             .symbols_ = parsed_symbols,
         };
 
@@ -180,6 +185,9 @@ namespace plugins::manifest {
         add_optional("optimization_mode", host_params_.optimization_mode_);
         add_optional("fill_max_pct_of_volume", host_params_.fill_max_pct_of_volume_);
         add_optional("risk_free_rate", host_params_.risk_free_rate_);
+        add_optional("allow_short_selling", host_params_.allow_short_selling_);
+        add_optional("initial_margin_pct", host_params_.initial_margin_pct_);
+        add_optional("max_leverage", host_params_.max_leverage_);
 
         add_optional("position_sizing_method", host_params_.position_sizing_method_);
         add_optional("position_size_value", host_params_.position_size_value_);

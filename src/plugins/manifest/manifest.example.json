@@ -43,7 +43,10 @@
     "backtest_end_datetime": "2025-10-01T00:00:00Z",
     "monte_carlo_runs": 1,
     "monte_carlo_seed": null,
-    "optimization_mode": "none"
+    "optimization_mode": "none",
+    "allow_short_selling": true,
+    "initial_margin_pct": 0.50,
+    "max_leverage": 2.0
   },
   "strategy_params": {
     "fast": 10,

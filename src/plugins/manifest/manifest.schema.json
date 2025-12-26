@@ -212,6 +212,25 @@
           "maximum": 1.0,
           "default": 0.02,
           "description": "Annual risk-free rate for Sharpe/Sortino calculations"
+        },
+        "allow_short_selling": {
+          "type": "boolean",
+          "default": false,
+          "description": "If short selling is allowed"
+        },
+        "initial_margin_pct": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.50,
+          "description": "The initial margin percentage"
+        },
+        "max_leverage": {
+          "type": "number",
+          "minimum": 1.0,
+          "maximum": 20.0,
+          "default": 2.0,
+          "description": "The maximum leverage"
         }
       }
     },

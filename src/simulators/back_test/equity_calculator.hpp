@@ -16,6 +16,7 @@ namespace simulators {
         [[nodiscard]] static Money calculate_equity(const simulators::State& state);
         [[nodiscard]] static double calculate_return(const plugins::manifest::HostParams& host_params, Money equity);
         [[nodiscard]] static double calculate_max_drawdown(const simulators::State& state, Money equity);
+        [[nodiscard]] static Money calculate_available_margin(const simulators::State& state);
     };
 
 }  // namespace simulators

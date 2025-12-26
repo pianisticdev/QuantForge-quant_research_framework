@@ -41,6 +41,7 @@ namespace models {
         std::optional<Money> limit_price_;
         std::optional<Money> stop_loss_price_;
         std::optional<Money> take_profit_price_;
+        std::optional<double> leverage_;
 
         [[nodiscard]] bool is_buy() const { return this->action_ == constants::BUY; }
         [[nodiscard]] bool is_sell() const { return this->action_ == constants::SELL; }
@@ -55,7 +56,8 @@ namespace models {
               order_type_(inst.order_type_),
               limit_price_(inst.limit_price_ == NULL_MARKET_TRIGGER_PRICE ? std::nullopt : std::make_optional(Money(inst.limit_price_))),
               stop_loss_price_(inst.stop_loss_price_ == NULL_MARKET_TRIGGER_PRICE ? std::nullopt : std::make_optional(Money(inst.stop_loss_price_))),
-              take_profit_price_(inst.take_profit_price_ == NULL_MARKET_TRIGGER_PRICE ? std::nullopt : std::make_optional(Money(inst.take_profit_price_))) {}
+              take_profit_price_(inst.take_profit_price_ == NULL_MARKET_TRIGGER_PRICE ? std::nullopt : std::make_optional(Money(inst.take_profit_price_))),
+              leverage_(inst.leverage_ <= 0 ? std::nullopt : std::make_optional(inst.leverage_)) {}
         // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
         Order(double quantity, int64_t created_at_ns, std::string symbol, std::string action, std::string order_type, std::optional<Money> limit_price,
               std::optional<Money> stop_loss_price, std::optional<Money> take_profit_price)

@@ -56,6 +56,7 @@ namespace simulators {
             .active_sell_fills_ = {},
             .new_fills_ = {},
             .new_exit_orders_ = {},
+            .margin_in_use_ = Money(0),
         };
         data_structures::MinHeap<models::ScheduledOrder> order_book_;
         ExitOrderBook exit_order_book_;

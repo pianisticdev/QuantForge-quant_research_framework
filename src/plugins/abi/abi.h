@@ -73,6 +73,7 @@ typedef struct COrder {
     const char* symbol_;
     const char* action_;
     double quantity_;
+    double leverage_;
 
     int64_t limit_price_;
     int64_t stop_loss_price_;

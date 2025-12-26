@@ -12,6 +12,7 @@ namespace simulators {
     class State {
        public:
         Money cash_;
+        Money margin_in_use_;
         int64_t current_timestamp_ns_;
         std::map<std::string, models::Position> positions_;
         std::map<std::string, Money> current_prices_;
@@ -23,6 +24,7 @@ namespace simulators {
         std::vector<models::ExitOrder> new_exit_orders_;
         std::map<std::string, double> active_buy_fills_;
         std::map<std::string, double> active_sell_fills_;
+        std::map<std::string, Money> active_margin_for_fills_;
         Money peak_equity_;
         double max_drawdown_;
 

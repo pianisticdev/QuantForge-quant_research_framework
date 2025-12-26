@@ -26,4 +26,9 @@ namespace simulators {
 
         return std::max(current_drawdown, state.max_drawdown_);
     }
+
+    Money EquityCalculator::calculate_available_margin(const simulators::State& state) {
+        Money equity = calculate_equity(state);
+        return equity - state.margin_in_use_;
+    }
 }  // namespace simulators
