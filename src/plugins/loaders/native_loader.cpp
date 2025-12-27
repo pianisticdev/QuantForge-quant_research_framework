@@ -86,7 +86,7 @@ namespace plugins::loaders {
         }
 
         CBar plugin_bar = plugins::loaders::to_plugin_bar(bar);
-        CState c_state = simulators::ABIConverter().transform(state);  // TODO This should be a static method
+        CState c_state = simulators::ABIConverter().to_c_state(state);  // TODO This should be a static method
         return exp_.vtable_.on_bar(exp_.instance_, &plugin_bar, &c_state);
     }
 

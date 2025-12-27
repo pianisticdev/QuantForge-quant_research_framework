@@ -5,7 +5,7 @@
 #include "./state.hpp"
 
 namespace simulators {
-    CState ABIConverter::transform(const simulators::State& state) {
+    CState ABIConverter::to_c_state(const simulators::State& state) {
         c_positions_cache_ = to_c_positions(state.positions_);
         c_fills_cache_ = to_c_fills(state.new_fills_);
         c_equity_cache_ = to_c_equity_snapshots(state.equity_curve_);

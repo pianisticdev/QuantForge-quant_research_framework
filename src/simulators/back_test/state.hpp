@@ -43,6 +43,16 @@ namespace simulators {
 
         [[nodiscard]] Money get_symbol_low(const std::string& symbol) const { return current_bar_prices_.at(symbol).low_; }
 
+        [[nodiscard]] bool has_symbol_prices(const std::string& symbol) const { return current_bar_prices_.find(symbol) != current_bar_prices_.end(); }
+
+        [[nodiscard]] int64_t get_symbol_volume(const std::string& symbol) const { return current_bar_volumes_.at(symbol); }
+
+        [[nodiscard]] bool has_symbol_volume(const std::string& symbol) const { return current_bar_volumes_.find(symbol) != current_bar_volumes_.end(); }
+
+        [[nodiscard]] models::Position get_symbol_position(const std::string& symbol) const { return positions_.at(symbol); }
+
+        [[nodiscard]] bool has_symbol_position(const std::string& symbol) const { return positions_.find(symbol) != positions_.end(); }
+
         void prepare_initial_state(const plugins::manifest::HostParams& host_params);
 
         void update_state(const models::ExecutionResultSuccess& execution_result);

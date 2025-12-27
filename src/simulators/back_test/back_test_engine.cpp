@@ -24,7 +24,7 @@ namespace simulators {
 
         state_.prepare_initial_state(host_params);
 
-        auto iterable_plugin_data = data_store_->get_iterable_plugin_data(plugin_->get_plugin_name());
+        const auto iterable_plugin_data = data_store_->get_iterable_plugin_data(plugin_->get_plugin_name());
 
         std::for_each(iterable_plugin_data.begin(), iterable_plugin_data.end(), [&, host_params](const auto& bar) {
             if (!Exchange::is_within_market_hour_restrictions(bar.unix_ts_ns_, host_params)) {
@@ -37,7 +37,7 @@ namespace simulators {
             execute_limit_orders(host_params);
             execute_exit_orders(host_params);
 
-            PluginResult result = plugin_->on_bar(bar, state_);
+            const PluginResult result = plugin_->on_bar(bar, state_);
 
             if (result.code_ != 0) {
                 throw std::runtime_error("Plugin on_bar failed: " + std::string(result.message_));
@@ -67,13 +67,13 @@ namespace simulators {
 
     void BackTestEngine::execute_order_book(const http::stock_api::AggregateBarResult& bar, const plugins::manifest::HostParams& host_params) {
         while (!order_book_.empty()) {
-            auto top_order_optional = order_book_.top();
+            const auto top_order_optional = order_book_.top();
 
             if (!top_order_optional.has_value()) {
                 break;
             }
 
-            auto scheduled_order = top_order_optional.value();
+            const models::ScheduledOrder& scheduled_order = top_order_optional.value();
 
             if (scheduled_order.scheduled_fill_at_ns_ > bar.unix_ts_ns_) {
                 break;
@@ -81,7 +81,7 @@ namespace simulators {
 
             order_book_.pop();
 
-            auto execution_result = Executor::execute_order(scheduled_order.order_, host_params, state_);
+            const models::ExecutionResult execution_result = Executor::execute_order(scheduled_order.order_, host_params, state_);
 
             handle_execution_result(execution_result, host_params);
         }
@@ -99,12 +99,12 @@ namespace simulators {
 
                 if constexpr (std::is_same_v<T, models::ExecutionResultSuccess>) {
                     if (arg.fill_.is_sell()) {
-                        auto closed_fills = PositionCalculator::find_buy_fill_uuids_closed_by_sell(arg.fill_, state_);
+                        const auto closed_fills = PositionCalculator::find_buy_fill_uuids_closed_by_sell(arg.fill_, state_);
                         exit_order_book_.reduce_exit_orders_by_fills(closed_fills);
                     }
 
                     if (arg.fill_.is_buy()) {
-                        auto closed_fills = PositionCalculator::find_sell_fill_uuids_closed_by_buy(arg.fill_, state_);
+                        const auto closed_fills = PositionCalculator::find_sell_fill_uuids_closed_by_buy(arg.fill_, state_);
                         exit_order_book_.reduce_exit_orders_by_fills(closed_fills);
                     }
 
@@ -131,7 +131,7 @@ namespace simulators {
 
     void BackTestEngine::schedule_plugin_instructions(const PluginResult& result, const plugins::manifest::HostParams& host_params) {
         ABIConverter::iterate_c_instructions(result, [&, host_params](const auto& c_intruction) {
-            auto instruction = ABIConverter::to_instruction(c_intruction);
+            const models::Instruction instruction = ABIConverter::to_instruction(c_intruction);
 
             models::Order order = std::visit(
                 [&](auto&& arg) {
@@ -156,26 +156,26 @@ namespace simulators {
 
     void BackTestEngine::execute_limit_orders(const plugins::manifest::HostParams& host_params) {
         limit_order_book_.process_buy_limits(state_, [&, host_params](const models::Order& order) {
-            auto execution_result = Executor::execute_order(order, host_params, state_);
+            const models::ExecutionResult execution_result = Executor::execute_order(order, host_params, state_);
             handle_execution_result(execution_result, host_params);
         });
 
         limit_order_book_.process_sell_limits(state_, [&, host_params](const models::Order& order) {
-            auto execution_result = Executor::execute_order(order, host_params, state_);
+            const models::ExecutionResult execution_result = Executor::execute_order(order, host_params, state_);
             handle_execution_result(execution_result, host_params);
         });
     }
 
     void BackTestEngine::execute_exit_orders(const plugins::manifest::HostParams& host_params) {
         exit_order_book_.process_stop_loss_heap(state_, [&, host_params](const models::StopLossExitOrder& exit_order) {
-            auto close_order = exit_order.to_close_instruction();
-            auto execution_result = Executor::execute_order(close_order, host_params, state_);
+            const models::Order close_order = exit_order.to_close_instruction();
+            const models::ExecutionResult execution_result = Executor::execute_order(close_order, host_params, state_);
             handle_execution_result(execution_result, host_params);
         });
 
         exit_order_book_.process_take_profit_heap(state_, [&, host_params](const models::TakeProfitExitOrder& exit_order) {
-            auto close_order = exit_order.to_close_instruction();
-            auto execution_result = Executor::execute_order(close_order, host_params, state_);
+            const models::Order close_order = exit_order.to_close_instruction();
+            const models::ExecutionResult execution_result = Executor::execute_order(close_order, host_params, state_);
             handle_execution_result(execution_result, host_params);
         });
     }

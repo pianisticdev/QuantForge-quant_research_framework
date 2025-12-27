@@ -25,7 +25,7 @@ namespace simulators {
         }
 
         if (commission_type == "percentage") {
-            Money trade_value = fill.price_ * fill.quantity_;
+            const Money trade_value = fill.price_ * fill.quantity_;
             return trade_value * commission_value;
         }
 

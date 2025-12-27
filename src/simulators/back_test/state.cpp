@@ -17,7 +17,7 @@ namespace simulators {
             return std::make_optional(std::pair<std::string, double>{fill.uuid_, fill.quantity_});
         }
 
-        double diff_qty = std::min(fill.quantity_, std::abs(current_qty));
+        const double diff_qty = std::min(fill.quantity_, std::abs(current_qty));
         if (diff_qty > 0) {
             if (fill.is_buy()) {
                 reduce_active_sell_fills_fifo(fill.symbol_, diff_qty);
@@ -26,7 +26,7 @@ namespace simulators {
             }
         }
 
-        double open_qty = fill.quantity_ - diff_qty;
+        const double open_qty = fill.quantity_ - diff_qty;
         if (open_qty > constants::EPSILON) {
             return std::make_optional(std::pair<std::string, double>{fill.uuid_, open_qty});
         }
@@ -40,12 +40,12 @@ namespace simulators {
         fills_.emplace_back(execution_result.fill_);
         new_fills_.emplace_back(execution_result.fill_);
 
-        auto pos_it = positions_.find(execution_result.fill_.symbol_);
-        double current_qty = (pos_it != positions_.end()) ? pos_it->second.quantity_ : 0.0;
-        auto comparison = execution_result.fill_.is_buy() ? current_qty < 0 : current_qty > 0;
-        auto active_fills_optional = populate_active_fills(execution_result.fill_, current_qty, comparison);
+        const auto pos_it = positions_.find(execution_result.fill_.symbol_);
+        const double current_qty = (pos_it != positions_.end()) ? pos_it->second.quantity_ : 0.0;
+        const bool comparison = execution_result.fill_.is_buy() ? current_qty < 0 : current_qty > 0;
+        const auto active_fills_optional = populate_active_fills(execution_result.fill_, current_qty, comparison);
         if (active_fills_optional.has_value()) {
-            auto [fill_uuid, quantity] = active_fills_optional.value();
+            const auto [fill_uuid, quantity] = active_fills_optional.value();
             if (execution_result.fill_.is_buy()) {
                 active_buy_fills_[fill_uuid] = quantity;
             } else if (execution_result.fill_.is_sell()) {
@@ -68,7 +68,7 @@ namespace simulators {
     }
 
     void State::record_bar_equity_snapshot(const plugins::manifest::HostParams& host_params) {
-        auto equity = EquityCalculator::calculate_equity(*this);
+        const Money equity = EquityCalculator::calculate_equity(*this);
 
         if (equity > peak_equity_) {
             peak_equity_ = equity;
@@ -130,8 +130,8 @@ namespace simulators {
             }
 
             if (fill.symbol_ == symbol && fill.is_buy() && active_buy_fills_.find(fill.uuid_) != active_buy_fills_.end()) {
-                double available = active_buy_fills_[fill.uuid_];
-                double to_close = std::min(available, remaining);
+                const double available = active_buy_fills_[fill.uuid_];
+                const double to_close = std::min(available, remaining);
 
                 active_buy_fills_[fill.uuid_] -= to_close;
 
@@ -157,8 +157,8 @@ namespace simulators {
             }
 
             if (fill.symbol_ == symbol && fill.is_sell() && active_sell_fills_.find(fill.uuid_) != active_sell_fills_.end()) {
-                double available = active_sell_fills_[fill.uuid_];
-                double to_close = std::min(available, remaining);
+                const double available = active_sell_fills_[fill.uuid_];
+                const double to_close = std::min(available, remaining);
 
                 active_sell_fills_[fill.uuid_] -= to_close;
 
