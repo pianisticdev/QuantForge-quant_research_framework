@@ -23,6 +23,10 @@ namespace simulators {
 
     void LimitOrderBook::process_buy_limits(const simulators::State& state, const std::function<void(const models::Order&)>& callback) {
         for (auto& [symbol, heap] : buy_limits_) {
+            if (!state.has_symbol_prices(symbol)) {
+                continue;
+            }
+
             const Money current_bar_low = state.get_symbol_low(symbol);
 
             while (!heap.empty()) {
@@ -45,6 +49,10 @@ namespace simulators {
 
     void LimitOrderBook::process_sell_limits(const simulators::State& state, const std::function<void(const models::Order&)>& callback) {
         for (auto& [symbol, heap] : sell_limits_) {
+            if (!state.has_symbol_prices(symbol)) {
+                continue;
+            }
+
             const Money current_bar_high = state.get_symbol_high(symbol);
 
             while (!heap.empty()) {

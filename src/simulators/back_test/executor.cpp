@@ -56,7 +56,7 @@ namespace simulators {
 
         const Money fill_price = calculate_fill_price(order, state);
 
-        const models::Position symbol_position = state.get_symbol_position(order.symbol_);
+        const models::Position symbol_position = state.get_symbol_position_or(order.symbol_, models::Position(order.symbol_, 0.0, Money(0)));
         const double current_position_quantity = state.has_symbol_position(order.symbol_) ? symbol_position.quantity_ : 0.0;
         const double new_position_quantity = current_position_quantity + (order.is_buy() ? fillable_quantity : -fillable_quantity);
 
@@ -71,8 +71,8 @@ namespace simulators {
         const Money margin_required =
             position_opening_quantity > constants::EPSILON ? calculate_margin_required(host_params, fill_price, position_opening_quantity, leverage) : Money(0);
 
-        const auto validation_error =
-            validate_margin(order, fill_price, commission, host_params, state, position_opening_quantity, new_position_quantity, margin_required);
+        const auto validation_error = validate_margin(order, fill_price, commission, host_params, state, position_opening_quantity, new_position_quantity,
+                                                      margin_required, fillable_quantity);
         if (validation_error.has_value()) {
             return models::ExecutionResultError(validation_error.value());
         }
@@ -188,7 +188,8 @@ namespace simulators {
     std::optional<std::string> Executor::validate_margin(const models::Order& order, Money fill_price, Money commission,
                                                          const plugins::manifest::HostParams& host_params, const simulators::State& state,
                                                          // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-                                                         double position_opening_quantity, double new_position_quantity, Money margin_required) {
+                                                         double position_opening_quantity, double new_position_quantity, Money margin_required,
+                                                         double fillable_quantity) {
         if (order.is_sell() && !host_params.allow_short_selling_.value_or(true)) {
             if (new_position_quantity < 0) {
                 return "Short selling is not allowed";
@@ -207,11 +208,18 @@ namespace simulators {
         }
 
         if (position_opening_quantity <= constants::EPSILON) {
-            const Money total_cost = order.is_buy() ? (fill_price * order.quantity_) + commission : commission;
+            const double position_closing_quantity = fillable_quantity;
+            const simulators::ClosingMarginInfo closing_info = calculate_closing_margin_info(order, fill_price, position_closing_quantity, state);
 
-            if (total_cost > state.cash_) {
-                return "Insufficient cash to close position.";
+            const Money net_cash_flow = closing_info.margin_to_release_ + closing_info.realized_pnl_ - commission;
+
+            if (net_cash_flow < Money(0)) {
+                const Money cash_required = Money(0) - net_cash_flow;
+                if (cash_required > state.cash_) {
+                    return "Insufficient cash to close position.";
+                }
             }
+
             return std::nullopt;
         }
 

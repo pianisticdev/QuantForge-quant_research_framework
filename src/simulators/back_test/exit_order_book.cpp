@@ -39,6 +39,11 @@ namespace simulators {
                 continue;
             }
 
+            if (!state.has_symbol_prices(exit_order.symbol_)) {
+                stop_loss_heap_.pop();
+                continue;
+            }
+
             const Money current_bar_low = state.get_symbol_low(exit_order.symbol_);
             const Money current_bar_high = state.get_symbol_high(exit_order.symbol_);
 
@@ -77,6 +82,11 @@ namespace simulators {
 
             const auto pos_it = state.positions_.find(exit_order.symbol_);
             if (pos_it == state.positions_.end()) {
+                take_profit_heap_.pop();
+                continue;
+            }
+
+            if (!state.has_symbol_prices(exit_order.symbol_)) {
                 take_profit_heap_.pop();
                 continue;
             }

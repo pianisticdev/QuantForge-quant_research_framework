@@ -36,7 +36,8 @@ namespace simulators {
 
         [[nodiscard]] static std::optional<std::string> validate_margin(const models::Order& order, Money fill_price, Money commission,
                                                                         const plugins::manifest::HostParams& host_params, const simulators::State& state,
-                                                                        double position_opening_quantity, double new_position_quantity, Money margin_required);
+                                                                        double position_opening_quantity, double new_position_quantity, Money margin_required,
+                                                                        double fillable_quantity);
 
         [[nodiscard]] static double calculate_position_opening_quantity(const models::Order& order, double fillable_quantity, double current_position_quantity,
                                                                         double new_position_quantity);

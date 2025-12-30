@@ -168,6 +168,8 @@ namespace models {
         std::string symbol_;
         double quantity_;
         Money average_price_;
+
+        Position(std::string symbol, double quantity, Money average_price) : symbol_(std::move(symbol)), quantity_(quantity), average_price_(average_price) {}
     };
 
     // We calculate the rolling windows once per day

@@ -52,6 +52,10 @@ namespace simulators {
 
         [[nodiscard]] models::Position get_symbol_position(const std::string& symbol) const { return positions_.at(symbol); }
 
+        [[nodiscard]] models::Position get_symbol_position_or(const std::string& symbol, const models::Position& default_position) const {
+            return positions_.find(symbol) != positions_.end() ? positions_.at(symbol) : default_position;
+        }
+
         [[nodiscard]] bool has_symbol_position(const std::string& symbol) const { return positions_.find(symbol) != positions_.end(); }
 
         void prepare_initial_state(const plugins::manifest::HostParams& host_params);
