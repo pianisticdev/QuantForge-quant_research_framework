@@ -14,7 +14,13 @@ namespace plugins::loaders {
 
     class NativeLoader : public IPluginLoader {
        public:
-        NativeLoader(std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest);
+        explicit NativeLoader(std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest);
+        ~NativeLoader() override = default;
+
+        NativeLoader(const NativeLoader&) = delete;
+        NativeLoader& operator=(const NativeLoader&) = delete;
+        NativeLoader(NativeLoader&&) = delete;
+        NativeLoader& operator=(NativeLoader&&) = delete;
 
         void load_plugin(const SimulatorContext& ctx) override;
         void on_init() const override;

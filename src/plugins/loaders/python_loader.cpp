@@ -4,9 +4,13 @@
 #include <pybind11/pybind11.h>
 
 #include "../../http/api/stock_api.hpp"
+#include "../../simulators/back_test/abi_converter.hpp"
 #include "../../simulators/back_test/models.hpp"
+#include "../../simulators/back_test/state.hpp"
 #include "../abi/abi.h"
 #include "../manifest/manifest.hpp"
+
+// NOLINTBEGIN(cppcoreguidelines-pro-type-union-access, cppcoreguidelines-owning-memory)
 
 namespace py = pybind11;
 
@@ -29,11 +33,9 @@ namespace plugins::loaders {
             py::capsule ctx_capsule((void*)&ctx, "SimulatorContext", [](void*) {});
             py::object plugin_instance = create_plugin_fn(ctx_capsule);
 
-            auto* pp = new PyPlugin{plugin_instance, {}, {}, {}};  // NOLINT(cppcoreguidelines-owning-memory)
+            auto* pp = new PyPlugin{plugin_instance, {}, {}, {}};
 
-            pp->vtable_.destroy = [](void* self) {
-                delete static_cast<PyPlugin*>(self);  // NOLINT(cppcoreguidelines-owning-memory)
-            };
+            pp->vtable_.destroy = [](void* self) { delete static_cast<PyPlugin*>(self); };
 
             pp->vtable_.on_init = [](void* self, const PluginOptions* opts) -> PluginResult {
                 auto& python_plugin = *static_cast<PyPlugin*>(self);
@@ -71,15 +73,37 @@ namespace plugins::loaders {
                 state_dict["positions"] = positions_list;
 
                 py::list fills_list;
-                for (size_t i = 0; i < state->trade_history_count_; ++i) {
+                for (size_t i = 0; i < state->new_fills_count_; ++i) {
                     py::dict fill;
-                    fill["symbol"] = state->trade_history_[i].symbol_;
-                    fill["quantity"] = state->trade_history_[i].quantity_;
-                    fill["price"] = state->trade_history_[i].price_;
-                    fill["timestamp_ns"] = state->trade_history_[i].timestamp_ns_;
+                    fill["symbol"] = state->new_fills_[i].symbol_;
+                    fill["quantity"] = state->new_fills_[i].quantity_;
+                    fill["price"] = state->new_fills_[i].price_;
+                    fill["created_at_ns"] = state->new_fills_[i].created_at_ns_;
+                    fill["uuid"] = state->new_fills_[i].uuid_;
+                    fill["action"] = state->new_fills_[i].action_;
                     fills_list.append(fill);
                 }
-                state_dict["fills"] = fills_list;
+                state_dict["new_fills"] = fills_list;
+
+                py::list exit_orders_list;
+                for (size_t i = 0; i < state->new_exit_orders_count_; ++i) {
+                    py::dict exit_order;
+                    const auto& order = state->new_exit_orders_[i];
+                    exit_order["type"] = order.type_;
+                    if (order.type_ == EXIT_ORDER_STOP_LOSS) {
+                        exit_order["symbol"] = order.data_.stop_loss_.symbol_;
+                        exit_order["trigger_quantity"] = order.data_.stop_loss_.trigger_quantity_;
+                        exit_order["stop_loss_price"] = order.data_.stop_loss_.stop_loss_price_;
+                        exit_order["fill_uuid"] = order.data_.stop_loss_.fill_uuid_;
+                    } else if (order.type_ == EXIT_ORDER_TAKE_PROFIT) {
+                        exit_order["symbol"] = order.data_.take_profit_.symbol_;
+                        exit_order["trigger_quantity"] = order.data_.take_profit_.trigger_quantity_;
+                        exit_order["take_profit_price"] = order.data_.take_profit_.take_profit_price_;
+                        exit_order["fill_uuid"] = order.data_.take_profit_.fill_uuid_;
+                    }
+                    exit_orders_list.append(exit_order);
+                }
+                state_dict["new_exit_orders"] = exit_orders_list;
 
                 py::list equity_curve_list;
                 for (size_t i = 0; i < state->equity_curve_count_; ++i) {
@@ -98,7 +122,16 @@ namespace plugins::loaders {
                 }
                 state_dict["equity_curve"] = equity_curve_list;
 
-                auto py_result = python_plugin.obj_.attr("on_bar")(bar->unix_ts_ns_, bar->open_, bar->high_, bar->low_, bar->close_, bar->volume_, state_dict);
+                py::dict bar_dict;
+                bar_dict["symbol"] = bar->symbol_;
+                bar_dict["unix_ts_ns"] = bar->unix_ts_ns_;
+                bar_dict["open"] = bar->open_;
+                bar_dict["high"] = bar->high_;
+                bar_dict["low"] = bar->low_;
+                bar_dict["close"] = bar->close_;
+                bar_dict["volume"] = bar->volume_;
+
+                auto py_result = python_plugin.obj_.attr("on_bar")(bar_dict, state_dict);
 
                 return PythonLoader::to_plugin_result(python_plugin, py_result);
             };
@@ -106,15 +139,13 @@ namespace plugins::loaders {
             pp->vtable_.on_end = [](void* self, const char** json_out) -> PluginResult {
                 auto& python_plugin = *static_cast<PyPlugin*>(self);
                 auto out = python_plugin.obj_.attr("on_end")().cast<std::string>();
-                char* heap = new char[out.size() + 1];  // NOLINT(cppcoreguidelines-owning-memory)
+                char* heap = new char[out.size() + 1];
                 memcpy(heap, out.c_str(), out.size() + 1);
                 *json_out = heap;
-                return PluginResult{0, nullptr, .instructions_count_ = 0, .instructions_ = nullptr};
+                return PluginResult{0, nullptr, nullptr, 0};
             };
 
-            pp->vtable_.free_string = [](void*, const char* p) {
-                delete[] p;  // NOLINT(cppcoreguidelines-owning-memory)
-            };
+            pp->vtable_.free_string = [](void*, const char* p) { delete[] p; };
 
             exp_ = PluginExport{PLUGIN_API_VERSION, pp, pp->vtable_};
         } catch (const py::error_already_set& e) {
@@ -139,37 +170,45 @@ namespace plugins::loaders {
 
     PluginResult PythonLoader::on_start() const {
         if (exp_.api_version_ != PLUGIN_API_VERSION) {
-            return PluginResult{1, "Invalid API Version", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Invalid API Version", nullptr, 0};
         }
 
         if (exp_.vtable_.on_start == nullptr) {
-            return PluginResult{1, "Undefined Method on_start", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Undefined Method on_start", nullptr, 0};
         }
 
         return exp_.vtable_.on_start(exp_.instance_);
     }
 
-    PluginResult PythonLoader::on_bar(const http::stock_api::AggregateBarResult& bar, models::State& state) const {
+    PluginResult PythonLoader::on_bar(const http::stock_api::AggregateBarResult& bar, simulators::State& state) const {
         if (exp_.api_version_ != PLUGIN_API_VERSION) {
-            return PluginResult{1, "Invalid API Version", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Invalid API Version", nullptr, 0};
         }
 
         if (exp_.vtable_.on_bar == nullptr) {
-            return PluginResult{1, "Undefined Method on_bar", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Undefined Method on_bar", nullptr, 0};
         }
 
-        CBar plugin_bar = plugins::loaders::to_plugin_bar(bar);
-        CState c_state = models::State::to_c_state(state);
-        return exp_.vtable_.on_bar(exp_.instance_, &plugin_bar, &c_state);
+        CBar c_bar{.symbol_ = bar.symbol_.c_str(),
+                   .unix_ts_ns_ = bar.unix_ts_ns_,
+                   .open_ = bar.open_,
+                   .high_ = bar.high_,
+                   .low_ = bar.low_,
+                   .close_ = bar.close_,
+                   .volume_ = bar.volume_};
+
+        CState c_state = abi_converter_.to_c_state(state);
+
+        return exp_.vtable_.on_bar(exp_.instance_, &c_bar, &c_state);
     }
 
     PluginResult PythonLoader::on_end(const char** json_out) const {
         if (exp_.api_version_ != PLUGIN_API_VERSION) {
-            return PluginResult{1, "Invalid API Version", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Invalid API Version", nullptr, 0};
         }
 
         if (exp_.vtable_.on_end == nullptr) {
-            return PluginResult{1, "Undefined Method on_end", .instructions_count_ = 0, .instructions_ = nullptr};
+            return PluginResult{1, "Undefined Method on_end", nullptr, 0};
         }
 
         return exp_.vtable_.on_end(exp_.instance_, json_out);
@@ -228,18 +267,29 @@ namespace plugins::loaders {
             python_plugin.instruction_strings_.push_back(inst_dict["action"].cast<std::string>());
             const char* action = python_plugin.instruction_strings_.back().c_str();
 
-            python_plugin.instruction_strings_.push_back(inst_dict.contains("order_type") ? inst_dict["order_type"].cast<std::string>() : "");
-            const char* order_type = python_plugin.instruction_strings_.back().c_str();
-
             CInstruction c_inst;
-            c_inst.symbol_ = symbol;
-            c_inst.action_ = action;
-            c_inst.quantity_ = inst_dict["quantity"].cast<double>();
-            c_inst.order_type_ = order_type;
-            c_inst.limit_price_ = inst_dict.contains("limit_price") ? inst_dict["limit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
-            c_inst.stop_loss_price_ = inst_dict.contains("stop_loss_price") ? inst_dict["stop_loss_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
-            c_inst.take_profit_price_ =
-                inst_dict.contains("take_profit_price") ? inst_dict["take_profit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+            if (inst_dict.contains("quantity")) {
+                c_inst.type_ = INSTRUCTION_TYPE_ORDER;
+
+                python_plugin.instruction_strings_.push_back(inst_dict.contains("order_type") ? inst_dict["order_type"].cast<std::string>() : "market");
+                const char* order_type = python_plugin.instruction_strings_.back().c_str();
+
+                c_inst.data_.order_.symbol_ = symbol;
+                c_inst.data_.order_.action_ = action;
+                c_inst.data_.order_.quantity_ = inst_dict["quantity"].cast<double>();
+                c_inst.data_.order_.order_type_ = order_type;
+                c_inst.data_.order_.limit_price_ =
+                    inst_dict.contains("limit_price") ? inst_dict["limit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+                c_inst.data_.order_.stop_loss_price_ =
+                    inst_dict.contains("stop_loss_price") ? inst_dict["stop_loss_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+                c_inst.data_.order_.take_profit_price_ =
+                    inst_dict.contains("take_profit_price") ? inst_dict["take_profit_price"].cast<int64_t>() : models::NULL_MARKET_TRIGGER_PRICE;
+                c_inst.data_.order_.leverage_ = inst_dict.contains("leverage") ? inst_dict["leverage"].cast<double>() : 1.0;
+            } else {
+                c_inst.type_ = INSTRUCTION_TYPE_SIGNAL;
+                c_inst.data_.signal_.symbol_ = symbol;
+                c_inst.data_.signal_.action_ = action;
+            }
 
             python_plugin.current_instructions_.push_back(c_inst);
         }
@@ -250,3 +300,5 @@ namespace plugins::loaders {
     }
 
 }  // namespace plugins::loaders
+
+// NOLINTEND(cppcoreguidelines-pro-type-union-access, cppcoreguidelines-owning-memory)

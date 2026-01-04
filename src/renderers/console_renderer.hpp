@@ -13,6 +13,15 @@ namespace renderers {
 
     class ConsoleRenderer : public IRenderer {
        public:
+        ConsoleRenderer() = default;
+
+        ~ConsoleRenderer() override;
+
+        ConsoleRenderer(const ConsoleRenderer&) = delete;
+        ConsoleRenderer& operator=(const ConsoleRenderer&) = delete;
+        ConsoleRenderer(ConsoleRenderer&&) = delete;
+        ConsoleRenderer& operator=(ConsoleRenderer&&) = delete;
+
         void render_back_test_report(const std::vector<simulators::BackTestReport>& reports) override;
         void render_monte_carlo_report(const std::vector<simulators::MonteCarloReport>& reports) override;
     };

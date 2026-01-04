@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include "../../utils/money_utils.hpp"
@@ -109,6 +110,7 @@ namespace models {
         std::string fill_uuid_;
 
         bool operator<(const StopLossExitOrder& other) const { return stop_loss_price_ < other.stop_loss_price_; }
+        bool operator>(const StopLossExitOrder& other) const { return stop_loss_price_ > other.stop_loss_price_; }
 
         [[nodiscard]] Order to_close_instruction() const {
             std::string action = is_short_position_ ? constants::BUY : constants::SELL;
@@ -141,6 +143,7 @@ namespace models {
         std::string fill_uuid_;
 
         bool operator<(const TakeProfitExitOrder& other) const { return take_profit_price_ > other.take_profit_price_; }
+        bool operator>(const TakeProfitExitOrder& other) const { return take_profit_price_ < other.take_profit_price_; }
 
         [[nodiscard]] Order to_close_instruction() const {
             std::string action = is_short_position_ ? constants::BUY : constants::SELL;
@@ -165,6 +168,8 @@ namespace models {
     using ExitOrder = std::variant<StopLossExitOrder, TakeProfitExitOrder>;
 
     struct Position {
+        Position() : quantity_(0.0), average_price_(Money(0)) {}
+
         std::string symbol_;
         double quantity_;
         Money average_price_;
@@ -199,14 +204,14 @@ namespace models {
         Money cash_delta_;
         Money margin_used_;
         double leverage_;
-        models::Position position_;
-        models::Fill fill_;
-        std::vector<models::ExitOrder> exit_orders_;
-        std::optional<models::Order> partial_order_;
+        Position position_;
+        Fill fill_;
+        std::vector<ExitOrder> exit_orders_;
+        std::optional<Order> partial_order_;
 
         // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-        ExecutionResultSuccess(Money cash_delta, Money margin_used, double leverage, std::optional<models::Order> partial_order, models::Position position,
-                               models::Fill fill, std::vector<models::ExitOrder> exit_orders)
+        ExecutionResultSuccess(Money cash_delta, Money margin_used, double leverage, std::optional<Order> partial_order, Position position, Fill fill,
+                               std::vector<ExitOrder> exit_orders)
             : message_(partial_order.has_value() ? "Partial fill" : "Complete fill"),
               cash_delta_(cash_delta),
               margin_used_(margin_used),
@@ -244,6 +249,7 @@ namespace models {
         LimitBuyOrder(Order order, Money limit_price) : order_(std::move(order)), limit_price_(limit_price) {}
 
         bool operator<(const LimitBuyOrder& other) const { return limit_price_ < other.limit_price_; }
+        bool operator>(const LimitBuyOrder& other) const { return limit_price_ > other.limit_price_; }
     };
 
     struct LimitSellOrder {
@@ -253,6 +259,7 @@ namespace models {
         LimitSellOrder(Order order, Money limit_price) : order_(std::move(order)), limit_price_(limit_price) {}
 
         bool operator<(const LimitSellOrder& other) const { return limit_price_ < other.limit_price_; }
+        bool operator>(const LimitSellOrder& other) const { return limit_price_ > other.limit_price_; }
     };
 
     using ScheduledLimitOrder = std::variant<LimitBuyOrder, LimitSellOrder>;

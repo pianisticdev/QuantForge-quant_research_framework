@@ -1,11 +1,14 @@
 #include "console_renderer.hpp"
 
+#include <iostream>
 #include <vector>
 
 #include "../simulators/back_test/back_test_engine.hpp"
 #include "../simulators/monte_carlo/monte_carlo_engine.hpp"
 
 namespace renderers {
+    ConsoleRenderer::~ConsoleRenderer() = default;
+
     void ConsoleRenderer::render_back_test_report(const std::vector<simulators::BackTestReport>& reports) {
         std::cout << "----- Back Test Reports ----- " << std::endl;
 

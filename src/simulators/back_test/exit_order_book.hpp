@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "../../utils/max_heap.hpp"
 #include "../../utils/min_heap.hpp"
 #include "./models.hpp"

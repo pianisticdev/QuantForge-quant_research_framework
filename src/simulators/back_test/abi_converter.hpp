@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <functional>
+
 #include "../plugins/abi/abi.h"
 #include "./models.hpp"
 #include "./state.hpp"

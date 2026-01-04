@@ -39,15 +39,15 @@ namespace plugins::loaders {
         IPluginLoader() = default;
         virtual ~IPluginLoader() = default;
 
-        virtual void load_plugin(const SimulatorContext& ctx);
+        virtual void load_plugin(const SimulatorContext& ctx) = 0;
         virtual void on_init() const = 0;
         [[nodiscard]] virtual PluginResult on_start() const = 0;
         [[nodiscard]] virtual PluginResult on_bar(const http::stock_api::AggregateBarResult& bar, simulators::State& state) const = 0;
         [[nodiscard]] virtual PluginResult on_end(const char** json_out) const = 0;
         virtual void free_string(const char* str) const = 0;
         [[nodiscard]] virtual std::string get_plugin_name() const = 0;
-        virtual void unload_plugin();
-        [[nodiscard]] virtual PluginExport* get_plugin_export() const;
+        virtual void unload_plugin() = 0;
+        [[nodiscard]] virtual PluginExport* get_plugin_export() const = 0;
         [[nodiscard]] virtual plugins::manifest::HostParams get_host_params() const = 0;
     };
 

@@ -8,7 +8,8 @@
 #include <vector>
 
 #include "../../http/api/stock_api.hpp"
-#include "../../simulators/back_test/models.hpp"
+#include "../../simulators/back_test/abi_converter.hpp"
+#include "../../simulators/back_test/state.hpp"
 #include "../abi/abi.h"
 #include "../manifest/manifest.hpp"
 #include "interface.hpp"
@@ -25,12 +26,18 @@ namespace plugins::loaders {
 
     class PythonLoader : public IPluginLoader {
        public:
-        PythonLoader(std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest);
+        explicit PythonLoader(std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest);
+        ~PythonLoader() override = default;
+
+        PythonLoader(const PythonLoader&) = delete;
+        PythonLoader& operator=(const PythonLoader&) = delete;
+        PythonLoader(PythonLoader&&) = delete;
+        PythonLoader& operator=(PythonLoader&&) = delete;
 
         void load_plugin(const SimulatorContext& ctx) override;
         void on_init() const override;
         [[nodiscard]] PluginResult on_start() const override;
-        [[nodiscard]] PluginResult on_bar(const http::stock_api::AggregateBarResult& bar, models::State& state) const override;
+        [[nodiscard]] PluginResult on_bar(const http::stock_api::AggregateBarResult& bar, simulators::State& state) const override;  // Changed
         [[nodiscard]] PluginResult on_end(const char** json_out) const override;
         void free_string(const char* str) const override;
         [[nodiscard]] std::string get_plugin_name() const override;
@@ -43,6 +50,7 @@ namespace plugins::loaders {
 
         std::unique_ptr<plugins::manifest::PluginManifest> plugin_manifest_;
         mutable PluginExport exp_{};
+        mutable simulators::ABIConverter abi_converter_;  // Add this for state conversion
     };
 }  // namespace plugins::loaders
 

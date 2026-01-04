@@ -25,6 +25,7 @@ add_subdirectory(src/utils)
 add_subdirectory(src/plugins/abi)
 add_subdirectory(src/plugins/loaders)
 add_subdirectory(src/plugins/manifest)
+add_subdirectory(src/plugins/manager)
 
 # Simulators
 add_subdirectory(src/simulators/back_test)
@@ -43,4 +44,4 @@ add_executable(quant_forge main.cpp)
 # Only link the top-level API; it brings the rest transitively.
 target_link_libraries(
   quant_forge
-  PRIVATE http_api http_provider forge_engine utils)
+  PRIVATE http_provider forge_engine renderers)

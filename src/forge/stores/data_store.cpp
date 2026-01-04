@@ -1,5 +1,6 @@
 #include "data_store.hpp"
 
+#include <algorithm>
 #include <mutex>
 #include <optional>
 #include <string>

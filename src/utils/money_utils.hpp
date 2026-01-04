@@ -12,6 +12,8 @@ namespace money_utils {
         int64_t microdollars_;
 
        public:
+        Money() : microdollars_(0) {}
+
         explicit Money(int64_t microdollars) : microdollars_(microdollars) {}
 
         [[nodiscard]] static Money from_dollars(double dollars) { return Money(static_cast<int64_t>(std::round(dollars * constants::MONEY_SCALED_BASE))); }

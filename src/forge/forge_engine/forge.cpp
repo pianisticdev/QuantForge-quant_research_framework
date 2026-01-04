@@ -86,6 +86,14 @@ namespace forge {
 
     void ForgeEngine::set_renderer(std::unique_ptr<renderers::IRenderer> renderer) { renderer_ = std::move(renderer); }
 
+    void ForgeEngine::set_data_provider(std::unique_ptr<http::stock_api::IStockDataProvider> data_provider) { data_provider_ = std::move(data_provider); }
+
+    void ForgeEngine::set_http_client_factory(std::function<std::unique_ptr<http::client::IHttpClient>()> http_client_factory) {
+        http_client_factory_ = std::move(http_client_factory);
+    }
+
+    const std::function<std::unique_ptr<http::client::IHttpClient>()>& ForgeEngine::get_http_client_factory() const { return http_client_factory_; }
+
     const ThreadPoolOptions& ForgeEngine::get_thread_pool_options() const { return thread_pool_options_; }
 
     void ForgeEngine::initialize(const InitializationOptions& initialization_options) const {
